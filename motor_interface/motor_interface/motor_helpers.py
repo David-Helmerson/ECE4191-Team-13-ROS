@@ -1,0 +1,1 @@
+# This is where any helper functions that do not require any ROS can be put.
