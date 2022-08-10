@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'example_package'
+package_name = 'mouse_interface'
 
 setup(
     name=package_name,
@@ -13,14 +13,14 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='david',
-    maintainer_email='davidfhelmerson@gmail.com',
+    maintainer='ubuntu',
+    maintainer_email='ubuntu@todo.todo',
     description='TODO: Package description',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'example_node = example_package.example_node:main'
+            'mouse_reader = mouse_interface.mouse_reader:main'
         ],
     },
 )
