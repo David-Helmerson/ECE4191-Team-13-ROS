@@ -1,2 +1,2 @@
-uint8 x
-uint8 y
+int8 x
+int8 y

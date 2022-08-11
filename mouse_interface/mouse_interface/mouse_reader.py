@@ -7,7 +7,7 @@ import struct
 
 class MousePublisher(Node):
     """
-    Publishes raw mouse xy data at a fixed rate, likely will publish xy data as metric units in future. Currently lacks required root privileges
+    Publishes raw mouse xy data at a fixed ate. Requires user to be part of "input" usergroup.
 
     ...
     
