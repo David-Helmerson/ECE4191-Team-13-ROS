@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'serial_communication = serial_communication.serial_communication:main'
+            'serial_reader = serial_communication.serial_reader:main',
+            'serial_sender = serial_communication.serial_sender:main'
         ],
     },
 )

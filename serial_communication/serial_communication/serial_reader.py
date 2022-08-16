@@ -4,7 +4,7 @@ from rclpy.node import Node
 import struct
 
 
-class BufferFlagNode(Node):
+class SerialReaderNode(Node):
     """
     Reads off of a serial buffer at a fixed rate, and publishes raw recieved command data to
     topics specified by the command.
@@ -45,17 +45,15 @@ class BufferFlagNode(Node):
     def timer_callback(self):
         # Publish update whenever there is data in the buffer
         if self.serial.inWaiting():
-            in_bytes = self.serial.read(9)
-            command_id = int.from_bytes(in_bytes[0], 'big')
-            p1, p2 = struct.unpack('ff', in_bytes[1:])
+            id, p1, p2 = struct.unpack('>Bff', self.serial.read(9))
             # TODO: Publish p1, p2 to relevant topics
 
 
 def main(args=None):
     rclpy.init(args=args)
-    buffer_flag = BufferFlagNode()
-    rclpy.spin(buffer_flag)
-    buffer_flag.destroy_node()
+    serial_reader = SerialReaderNode()
+    rclpy.spin(serial_reader)
+    serial_reader.destroy_node()
     rclpy.shutdown()
 
 if __name__ == '__main__':
