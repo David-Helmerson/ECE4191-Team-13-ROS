@@ -35,8 +35,8 @@ def send(data_s,port_num,baudrate):
     return data_s
 
 
-def receive(port_num,baudrate):
-    ser = serial.Serial(port_num,baudrate)
+def receive(port_num, baudrate):
+    ser = serial.Serial(port_num, baudrate)
     while 1:
         if ser.inWaiting():
             data_r = ser.readall()
@@ -46,10 +46,10 @@ def receive(port_num,baudrate):
     
     
 
+if __name__ == '__main__':
+    data = 'AAAA'
+    port_num = 'COM2'
+    baudrate = 115200
 
-data = 'AAAA'
-port_num = 'COM2'
-baudrate = 115200
-
-send(data,port_num,baudrate)
-receive(port_num,baudrate)
+    send(data,port_num,baudrate)
+    receive(port_num,baudrate)

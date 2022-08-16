@@ -6,10 +6,10 @@ from geometry_msgs.msg import Twist
 import serial_communication.serial_communication.uart as sc
 
 
-class SerialCommunicationNode(Node):
+class SerialSenderNode(Node):
 
     def __init__(self):
-        super().__init__('serial_communication')
+        super().__init__('serial_sender')
         self.subscription = self.create_subscription(Twist, 'topic', self.motor_callback, 10)
 
     def motor_callback(self, msg):
@@ -19,11 +19,11 @@ class SerialCommunicationNode(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    serial_communication = SerialCommunicationNode()
+    serial_sender = SerialSenderNode()
 
-    rclpy.spin(serial_communication)
+    rclpy.spin(serial_sender)
 
-    serial_communication.destroy_node()
+    serial_sender.destroy_node()
     rclpy.shutdown()
 
 
