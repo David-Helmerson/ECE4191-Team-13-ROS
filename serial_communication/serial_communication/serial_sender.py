@@ -24,8 +24,7 @@ class SerialSenderNode(Node):
     """
     def __init__(self):
         super().__init__('serial_sender')
-        # TODO: Create subscribers to command topics
-
+        
         # ROS2 parameters
         self.declare_parameter('port_number', 'COM2')
         self.declare_parameter('baud_rate', 115200)
