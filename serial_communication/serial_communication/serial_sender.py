@@ -26,12 +26,13 @@ class SerialSenderNode(Node):
         super().__init__('serial_sender')
         
         # ROS2 parameters
-        self.declare_parameter('port_number', 'COM2')
+        self.declare_parameter('port_number', '/dev/ttyAMA2')
         self.declare_parameter('baud_rate', 115200)
         port_num = self.get_parameter('port_number').get_parameter_value().string_value
         baud_rate = self.get_parameter('baud_rate').get_parameter_value().integer_value
 
         # Important objects
+        print(port_num, baud_rate)
         self.serial = serial.Serial(port_num, baud_rate)
         self.sub = self.create_subscription(SerialCommand, 'command_send', self.command_callback, 10)
 

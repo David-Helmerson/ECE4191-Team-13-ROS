@@ -29,9 +29,9 @@ class SerialReaderNode(Node):
         super().__init__('buffer_flag')
 
         # ROS2 parameters
-        self.declare_parameter('port_number', 'COM2')
+        self.declare_parameter('port_number', '/dev/ttyAMA2')
         self.declare_parameter('baud_rate', 115200)
-        self.declare_parameter('frequency', 100)
+        self.declare_parameter('frequency', 100.0)
         port_num = self.get_parameter('port_number').get_parameter_value().string_value
         baud_rate = self.get_parameter('baud_rate').get_parameter_value().integer_value
         timer_freq = self.get_parameter('frequency').get_parameter_value().double_value
