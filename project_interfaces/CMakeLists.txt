@@ -17,18 +17,16 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
-set(msg_files
-  "msg/MousePos.msg"
-)
-
 rosidl_generate_interfaces(${PROJECT_NAME}
-  ${msg_files}
-)
+  "msg/MousePos.msg"
+  "msg/SerialCommand.msg"
+  DEPENDENCIES std_msgs)
 
 ament_export_dependencies(rosidl_default_runtime)
 

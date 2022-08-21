@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'mouse_interface'
+package_name = 'serial_communication'
 
 setup(
     name=package_name,
@@ -13,14 +13,15 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='ubuntu',
-    maintainer_email='ubuntu@todo.todo',
+    maintainer='davidhelmerson',
+    maintainer_email='davidfhelmerson@gmail.com',
     description='TODO: Package description',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'mouse_reader = mouse_interface.mouse_reader:main'
+            'serial_reader = serial_communication.serial_reader:main',
+            'serial_sender = serial_communication.serial_sender:main'
         ],
     },
 )
