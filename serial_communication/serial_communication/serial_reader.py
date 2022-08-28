@@ -45,7 +45,7 @@ class SerialReaderNode(Node):
     def timer_callback(self):
         # Publish update whenever there is data in the buffer
         if self.serial.inWaiting():
-            id, p1, p2 = struct.unpack('>Bff', self.serial.read(9))
+            id, p1, p2 = struct.unpack('<xBff', self.serial.read(10))
             # TODO: Publish p1, p2 to relevant topics
 
 

@@ -37,7 +37,7 @@ class SerialSenderNode(Node):
         self.sub = self.create_subscription(SerialCommand, 'command_send', self.command_callback, 10)
 
     def command_callback(self, msg):
-        self.serial.write(struct.pack('>Bff', msg.id, msg.p1, msg.p2))
+        self.serial.write(struct.pack('<xBff', msg.id, msg.p1, msg.p2))
 
 
 def main(args=None):
