@@ -27,7 +27,7 @@ class SerialSenderNode(Node):
         
         # ROS2 parameters
         self.declare_parameter('port_number', '/dev/ttyAMA2')
-        self.declare_parameter('baud_rate', 115200)
+        self.declare_parameter('baud_rate', 57600)
         port_num = self.get_parameter('port_number').get_parameter_value().string_value
         baud_rate = self.get_parameter('baud_rate').get_parameter_value().integer_value
 
@@ -37,7 +37,9 @@ class SerialSenderNode(Node):
         self.sub = self.create_subscription(SerialCommand, 'command_send', self.command_callback, 10)
 
     def command_callback(self, msg):
-        self.serial.write(struct.pack('<xBff', msg.id, msg.p1, msg.p2))
+        send_bytes = struct.pack('<xBff', msg.id, msg.p1, msg.p2)
+        #print(send_bytes)
+        self.serial.write(send_bytes)
 
 
 def main(args=None):
