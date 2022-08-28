@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'pure_pursuit = navigation.pure_pursuit:main'
+            'planner = navigation.planner:main'
         ],
     },
 )

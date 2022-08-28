@@ -40,9 +40,9 @@ def pp_waypoint(path, pos, dist, max_lookahead=math.inf):
                 if (0 <= t1 and t1 <= 1) or (0 <= t2 and t2 <= 1):
                     # If so, determine which intersection is earlier and return
                     t = t1 if t1 > t2 or t2 < 0 or 1 < t2 else t2
-                    return (t*x1+(1-t)*x2, t*y1+(1-t)*y2)
+                    return (t*x1+(1-t)*x2, t*y1+(1-t)*y2), i
         
-        if i > max_lookahead: return None  # Max lookahead surpassed
+        if i > max_lookahead: return None, None  # Max lookahead surpassed
         x1, y1 = x2, y2
     # No point found
-    return None
+    return None, None
