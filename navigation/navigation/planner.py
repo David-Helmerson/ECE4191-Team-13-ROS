@@ -68,7 +68,6 @@ class PlannerNode(Node):
 
     def map_callback(self, msg):
         self.path_waypoints = msg
-        
 
     def update_path(self):
         """
