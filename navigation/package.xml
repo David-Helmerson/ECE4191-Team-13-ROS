@@ -8,6 +8,7 @@
   <license>TODO: License declaration</license>
 
   <depend>project_interfaces</depend>
+  <depend>common_interfaces</depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

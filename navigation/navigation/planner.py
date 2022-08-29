@@ -4,26 +4,34 @@ from rclpy.node import Node
 from navigation.navigation.nav_helpers import *
 from geometry_msgs.msg import Twist
 from project_interfaces.msg import SerialCommand, WaypointPath
+from nav_msgs.msgs import OccupancyGrid
 
 
 class PlannerNode(Node):
     """
     Handles path waypoint generation within a given map, and provides pure pursuit following of path.
-    TODO: Update params/topics
     ...
 
     Parameters
     ----------
+    waypoint_freq : double
+        frequency that instantaneous waypoint commands are published to serial topic
     lookahead_dist : double
         lookahead distance for the pure pursuit algorithm
+    stop_dist : double
+        distance within a final waypoint that the robot should stop at
     max_lookahead : int
         maximum number of waypoints that the pure pursuit algorithm will consider
 
     Topics
     ------
-    path_waypoints: L{project_interfaces.WaypointPath} message
-        Subscribed topic for the list of waypoints in the planned path
-    command_send: L{project_interfaces.SerialCommand} message
+    robot_pose : L{geometry_msgs.Twist} message
+        Subscribed updates for the robot's position
+    occupancy_grid : L{nav_msgs.OccupancyGrid} message
+        Subscribed updates for the global ocupancy grid
+    path_override : L{project_interfaces.WaypointPath} message
+        Manual setting of waypoint path
+    command_send : L{project_interfaces.SerialCommand} message
         Published topic for instantaneous goal position commands
 
     """
@@ -35,18 +43,21 @@ class PlannerNode(Node):
         self.declare_parameter('lookahead_dist', 1.0)
         self.declare_parameter('stop_dist', 0.1)
         self.declare_parameter('max_lookahead', 0)
-        waypoint_freq = self.get_parameter('waypoint_freq').get_parameter_value().double_value
 
         # Important objects
         self.path_waypoints = None
         self.robot_pose = None
         self.map = None
+
         self.pose_sub = self.create_subscription(Twist, 'robot_pose', self.pose_callback)
         self.map_sub = self.create_subscription(Twist, 'occupancy_grid', self.pose_callback)
         self.path_sub = self.create_subscription(WaypointPath, 'path_override', self.path_callback)
         self.wp_pub = self.create_publisher(SerialCommand, 'command_send', 10)
+
+        waypoint_freq = self.get_parameter('waypoint_freq').get_parameter_value().double_value
         self.wp_pub_timer = self.create_timer(1/waypoint_freq, self.pp_callback)
 
+    # Update path upon any relevant information being updated
     def pose_callback(self, msg):
         self.robot_pose = msg
         self.update_path()
@@ -57,6 +68,7 @@ class PlannerNode(Node):
 
     def map_callback(self, msg):
         self.path_waypoints = msg
+        
 
     def update_path(self):
         """
@@ -69,7 +81,9 @@ class PlannerNode(Node):
 
     def pp_callback(self):
         """
-        TODO: docs
+        Calculates instantaneous waypoint to move towards according to pure pursuit where applicable,
+        otherwise moves to the last waypoint if within lookahead distance, or otherwise to the first waypoint
+        TODO: Remove waypoints up to last_wp?
         """
 
         # Cannot perform pure pursuit if there is not path to follow
