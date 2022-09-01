@@ -2,6 +2,7 @@ import rclpy
 import serial
 from rclpy.node import Node
 import struct
+from project_interfaces.msg import UltrasonicDistance
 
 
 class SerialReaderNode(Node):
@@ -39,13 +40,20 @@ class SerialReaderNode(Node):
         # Important objects
         self.timer = self.create_timer(1/timer_freq, self.timer_callback)
         self.serial = serial.Serial(port_num, baud_rate)
+
         # TODO: Create publishers for each command
+        self.us_pub = self.create_publisher(UltrasonicDistance, 'ultrasonic_distances', 10)
 
 
     def timer_callback(self):
         # Publish update whenever there is data in the buffer
         if self.serial.inWaiting():
-            id, p1, p2 = struct.unpack('>Bff', self.serial.read(9))
+            id, p1, p2 = struct.unpack('>xBff', self.serial.read(10))
+            if id == 101:
+                msg = UltrasonicDistance()
+                msg.left, msg.right = p1, p2
+                self.us_pub.publish(msg)
+
             # TODO: Publish p1, p2 to relevant topics
 
 
