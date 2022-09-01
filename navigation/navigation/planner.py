@@ -4,7 +4,7 @@ from rclpy.node import Node
 from navigation.navigation.nav_helpers import *
 from geometry_msgs.msg import Twist
 from project_interfaces.msg import SerialCommand, WaypointPath
-from nav_msgs.msgs import OccupancyGrid
+from nav_msgs.msg import OccupancyGrid
 
 
 class PlannerNode(Node):
@@ -66,7 +66,7 @@ class PlannerNode(Node):
         self.map = msg
         self.update_path()
 
-    def map_callback(self, msg):
+    def path_callback(self, msg):
         self.path_waypoints = msg
 
     def update_path(self):
