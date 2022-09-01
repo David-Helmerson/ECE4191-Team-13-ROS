@@ -30,7 +30,7 @@ class SerialReaderNode(Node):
 
         # ROS2 parameters
         self.declare_parameter('port_number', '/dev/ttyAMA2')
-        self.declare_parameter('baud_rate', 115200)
+        self.declare_parameter('baud_rate', 57600)
         self.declare_parameter('frequency', 100.0)
         port_num = self.get_parameter('port_number').get_parameter_value().string_value
         baud_rate = self.get_parameter('baud_rate').get_parameter_value().integer_value
@@ -38,15 +38,24 @@ class SerialReaderNode(Node):
 
         # Important objects
         self.timer = self.create_timer(1/timer_freq, self.timer_callback)
-        self.serial = serial.Serial(port_num, baud_rate)
+        self.serial = serial.Serial(port_num, baud_rate, timeout=1)
         # TODO: Create publishers for each command
 
 
     def timer_callback(self):
         # Publish update whenever there is data in the buffer
-        if self.serial.inWaiting():
-            id, p1, p2 = struct.unpack('<xBff', self.serial.read(10))
+        if self.serial.inWaiting() >= 10:
+            print('recieved', self.serial.inWaiting())
+            in_bytes = self.serial.read(10)
+            id, p1, p2 = struct.unpack('>xBff', in_bytes)
+            print(in_bytes, id, p1, p2)
             # TODO: Publish p1, p2 to relevant topics
+        '''
+        elif self.serial.inWaiting():
+            self.serial.flush()
+            n_flush = self.serial.inWaiting()
+            print('serial flushed', n_flush, 'bytes')
+        '''
 
 
 def main(args=None):
