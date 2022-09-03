@@ -2,7 +2,7 @@ import rclpy
 import time
 import math
 from rclpy.node import Node
-from project_interfaces.msg import RobotVelocity, RobotPose
+from project_interfaces.msg import RobotVelocity
 from project_interfaces.srv import PoseRequest
 
 class EncoderPredictorNode(Node):
