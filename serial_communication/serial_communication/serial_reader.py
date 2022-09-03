@@ -42,7 +42,7 @@ class SerialReaderNode(Node):
 
         # Important objects
         self.timer = self.create_timer(1/timer_freq, self.timer_callback)
-        self.serial = serial.Serial(port_num, baud_rate)
+        self.serial = serial.Serial(port_num, baud_rate, timeout=1)
 
         # TODO: Create publishers for each command
         self.command_pub = self.create_publisher(SerialCommand, 'command_send', 10)
