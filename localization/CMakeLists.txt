@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(project_interfaces)
+project(localization)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -17,23 +17,7 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(std_msgs REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
-
-rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/MousePos.msg"
-  "msg/RobotPose.msg"
-  "msg/RobotVelocity.msg"
-  "msg/SerialCommand.msg"
-  "msg/Waypoint.msg"
-  "msg/WaypointPath.msg"
-  "srv/PoseRequest.srv"
-  DEPENDENCIES std_msgs)
-
-ament_export_dependencies(rosidl_default_runtime)
+find_package(robot_localization REQUIRED)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -45,5 +29,11 @@ if(BUILD_TESTING)
   #set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
+
+install(DIRECTORY
+  launch
+  config
+  DESTINATION share/${PROJECT_NAME}/
+)
 
 ament_package()
