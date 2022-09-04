@@ -22,8 +22,8 @@ class PlannerNode(Node):
         self.goal_wp = None
         self.planner = TentaclePlanner(2/self.freq, 1, 1, 0)  # Plans head for twice the node's operating freq, just incase
 
-        self.pose_client = self.create_client(RobotPose, 'get_pose')
-        while not self.cli.wait_for_service(timeout_sec=0.5):
+        self.pose_client = self.create_client(PoseRequest, 'get_pose')
+        while not self.pose_client.wait_for_service(timeout_sec=0.5):
             self.get_logger().info('pose server not available, waiting..')
         self.pose_req = PoseRequest()
 
@@ -33,8 +33,8 @@ class PlannerNode(Node):
         self.tentacle_timer = self.create_timer(1/self.freq, self.tentacle_callback)
 
     def get_pose(self):
-        self.pose_req.time = time.time
-        self.future = self.cli.call_async(self.req)
+        self.pose_req.time = time.time()
+        self.future = self.pose_client.call_async(self.req)
         rclpy.spin_until_future_complete(self, self.future)
         return self.future.result().pose
 

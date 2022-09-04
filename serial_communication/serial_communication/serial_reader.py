@@ -28,7 +28,7 @@ class SerialReaderNode(Node):
 
     """
     def __init__(self):
-        super().__init__('buffer_flag')
+        super().__init__('serial_reader')
 
         self.start_bytes = b'\xff\xff\xff'
         self.end_bytes = b'\x55\x55\x55'
