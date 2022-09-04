@@ -3,12 +3,8 @@ import serial
 from rclpy.node import Node
 import struct
 from std_msgs.msg import UInt8
-<<<<<<< HEAD
-from project_interfaces.msg import SerialCommand, UltrasonicDistance
+from project_interfaces.msg import RobotVelocity, SerialCommand, UltrasonicDistance
 
-=======
-from project_interfaces.msg import SerialCommand, RobotVelocity
->>>>>>> localization
 
 class SerialReaderNode(Node):
     """
@@ -52,11 +48,8 @@ class SerialReaderNode(Node):
         # TODO: Create publishers for each command
         self.command_pub = self.create_publisher(SerialCommand, 'command_send', 10)
         self.resync_pub = self.create_publisher(UInt8, 'serial_resync', 10)
-<<<<<<< HEAD
         self.us_pub = self.create_publisher(UltrasonicDistance, 'ultrasonic_distances', 10)
-=======
-        self.vel_pub = self.create_publisher(RobotVelocity, 'encoder_vel', 10)
->>>>>>> localization
+        self.cmd_pub = self.create_publisher(RobotVelocity, 'encoder_vel', 10)
 
     def timer_callback(self):
         # Publish update whenever there is data in the buffer
@@ -87,8 +80,8 @@ class SerialReaderNode(Node):
                     msg = RobotVelocity()
                     msg.v, msg.w = p1, p2
                     self.vel_pub.publish(msg)
-                    
 
+                # Left/right distance measurements from ultrasonic sensors
                 elif id == 101:
                     msg = UltrasonicDistance()
                     msg.left, msg.right = p1, p2

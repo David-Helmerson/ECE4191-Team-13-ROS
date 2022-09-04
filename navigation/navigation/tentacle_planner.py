@@ -1,10 +1,10 @@
-import math
+import time
 import rclpy
 from rclpy.node import Node
 from navigation.navigation.nav_helpers import *
 from geometry_msgs.msg import Twist
-from project_interfaces.msg import SerialCommand, UltrasonicDistances, Waypoint
-
+from project_interfaces.msg import RobotPose, SerialCommand, UltrasonicDistances, Waypoint
+from project_interfaces.srv import PoseRequest
 
 class PlannerNode(Node):
     """
@@ -14,24 +14,29 @@ class PlannerNode(Node):
         super().__init__('planner')
         
         # ROS2 parameters
-        self.declare_parameter('freq', 30.0)
+        self.declare_parameter('freq', 15.0)
         self.declare_parameter('obstacle_threshold', 0.05)
         self.freq = self.get_parameter('freq').get_parameter_value().double_value
 
         # Important objects
-        self.robot_pose = None
         self.goal_wp = None
-        self.planner = TentaclePlanner(1/self.freq, 1, 1, 0)
+        self.planner = TentaclePlanner(2/self.freq, 1, 1, 0)  # Plans head for twice the node's operating freq, just incase
 
-        self.pose_sub = self.create_subscription(Twist, 'robot_pose', self.pose_callback)
+        self.pose_client = self.create_client(RobotPose, 'get_pose')
+        while not self.cli.wait_for_service(timeout_sec=0.5):
+            self.get_logger().info('pose server not available, waiting..')
+        self.pose_req = PoseRequest()
+
         self.goal_sub = self.create_subscription(Waypoint, 'goal_waypoint', self.goal_callback)
         self.us_sub = self.create_subscription(UltrasonicDistances, 'us_dists', self.us_callback)
-        self.vel_pub = self.create_publisher(SerialCommand, 'command_send', 10)
-        self.vel_pub_timer = self.create_timer(1/self.freq, self.tentacle_callback)
+        self.cmd_pub = self.create_publisher(SerialCommand, 'command_send', 10)
+        self.tentacle_timer = self.create_timer(1/self.freq, self.tentacle_callback)
 
-    # Update path upon any relevant information being updated
-    def pose_callback(self, msg):
-        self.robot_pose = [msg.linear.x, msg.linear.y, msg.angular.z]
+    def get_pose(self):
+        self.pose_req.time = time.time
+        self.future = self.cli.call_async(self.req)
+        rclpy.spin_until_future_complete(self, self.future)
+        return self.future.result().pose
 
     def goal_callback(self, msg):
         self.goal_wp = msg
@@ -41,12 +46,12 @@ class PlannerNode(Node):
         self.planner.left, self.planner.right = msg.left < thresh, msg.right < thresh
 
     def tentacle_callback(self):
-        if self.robot_pose is not None and self.goal_wp is not None:
-            v, w = TentaclePlanner.plan(self.goal_wp.x, self.goal_wp.y, 
-                                        self.robot_pose[0], self.robot_pose[1], self.robot_pose[2])
+        if self.goal_wp is not None:
+            pose = self.get_pose()
+            v, w = self.planner.plan(self.goal_wp.x, self.goal_wp.y, 0, pose.x, pose.y, pose.th)
             out_msg = SerialCommand()
             out_msg.id, out_msg.p1, out_msg.p2 = 101, v, w
-            self.vel_pub.publish(out_msg)
+            self.cmd_pub.publish(out_msg)
 
     
 
