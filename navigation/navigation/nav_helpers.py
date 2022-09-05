@@ -1,6 +1,31 @@
 import math
 import numpy as np
 
+
+class CardioidPlanner:
+    """
+    Planning returns a point on a cardioid closest to the goal point
+    """
+    def __init__(self, radius, n_points):
+        # Points on cardioid are given in polar coordinates
+        self.points = [(2*radius*(1 - math.cos(th)), th) 
+                        for th in np.linspace(-math.pi, math.pi, n_points, endpoint=False)]
+        self.left = False
+        self.right = False
+    
+    def plan(self, pose, goal):
+        # Find cardioid point closest to goal, left and right sensor measurements permitting
+        min_dist2, min_point = math.inf, None
+        for p in self.points:
+            if (p[1] <= 0 and self.left) or (p[1] >= 0 and self.right):
+                # Find euclidean distance from cardioid point to goal
+                p_dist2 = (p[0]*math.cos(pose[2]+p[1]) + pose[0] - goal[0])**2 + \
+                         (p[0]*math.cos(pose[2]+p[1]) + pose[0] - goal[0])**2 
+                if p_dist2 < min_dist2: min_dist2, min_point = p_dist2, p
+
+        return min_point
+
+
 class TentaclePlanner:
     
     def __init__(self, dt=0.1, steps=5, alpha=1, beta=0.0):
