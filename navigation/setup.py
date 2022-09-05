@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'planner = navigation.planner:main'
+            'tentacle_planner = navigation.tentacle_planner:main',
+            'waypoint_manager = navigation.waypoint_manager:main'
         ],
     },
 )
