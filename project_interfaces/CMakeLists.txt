@@ -28,7 +28,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/RobotPose.msg"
   "msg/RobotVelocity.msg"
   "msg/SerialCommand.msg"
-  "msg/UltrasonicDistance.msg"
+  "msg/UltrasonicDistances.msg"
   "msg/Waypoint.msg"
   "msg/WaypointPath.msg"
   "srv/PoseRequest.srv"

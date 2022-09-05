@@ -1,7 +1,7 @@
 import time
 import rclpy
 from rclpy.node import Node
-from navigation.navigation.nav_helpers import *
+from navigation.nav_helpers import *
 from geometry_msgs.msg import Twist
 from project_interfaces.msg import RobotPose, SerialCommand, UltrasonicDistances, Waypoint
 from project_interfaces.srv import PoseRequest
