@@ -24,8 +24,15 @@ class SerialReaderNode(Node):
 
     Topics
     ------
-    TODO
-
+    command_send: L{project_interfaces.SerialCommand} message
+        publishes number of bytes that the PSoC should shift by to resynchronize
+    serial_resync: L{std_msgs.UInt8} message
+        publishes number of bytes the Pi should shift by to to resynchronize
+    ultrasonic_distances: L{project_interfaces.UltrasonicDistances} message
+        publishes distances read by left/right ultransonic distance meters
+    encoder_vel: L{project_interfaces.RobotVelocity} message
+        published linear/angular velocity estimate recieved from PSoC and rotary encoders
+        
     """
     def __init__(self):
         super().__init__('serial_reader')
