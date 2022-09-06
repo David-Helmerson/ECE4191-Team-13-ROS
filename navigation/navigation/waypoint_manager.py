@@ -5,7 +5,28 @@ from project_interfaces.msg import Waypoint
 from project_interfaces.srv import PoseRequest
 
 class WaypointManagerNode(Node):
+    """
+    Node that determines next waypoint to be pathed to from a fixed list.
+    Waypoints changes are determined when robot reaches proximity of current goal
 
+    Parameters
+    ----------
+    frequency: double
+        Frequency of goal waypoint publishing
+    distance_thresh: double
+        Distance withing current goal waypoint that will consider it met
+
+    Topics
+    ------
+    goal_waypoint: L{project_interfaces.Waypoint} message
+        Current waypoint for the robot to path to
+
+    Services
+    --------
+    get_pose: L{project_interfaces.PoseRequest} service
+        Queries current time and recieves robot's predicted position based on latest velocity estimate
+
+    """
     def __init__(self):
         super().__init__('waypoint_manager')
 

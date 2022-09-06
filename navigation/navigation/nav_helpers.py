@@ -4,7 +4,27 @@ import numpy as np
 
 class CardioidPlanner:
     """
-    Planning returns a point on a cardioid closest to the goal point
+    Planner that determines point on a cardioid closest to the goal point
+
+    Parameters
+    ----------
+    radius: double
+        Cardioid size parameter, in meters
+    n_points: int
+        Number of points equally radially spaced along cardioid to consider
+
+    Attributes
+    ----------
+    left: bool
+        True if left ultrasonic sensor detects object
+    right: bool
+        True if right ultrasonic sensor detects object
+
+    Methods
+    -------
+    plan: (float, float, float), (float, float) --> (float, float)
+        Determines point on cardioid closest to goal point within obstacle detection restrictions
+    
     """
     def __init__(self, radius, n_points):
         # Points on cardioid are given in polar coordinates

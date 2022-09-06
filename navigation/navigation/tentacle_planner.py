@@ -8,7 +8,7 @@ from project_interfaces.srv import PoseRequest
 
 class PlannerNode(Node):
     """
-    Ros integration of given code
+    Ros integration of given code, I'd write a docstring if I knew exactly what this did and why.
     """
     def __init__(self):
         super().__init__('planner')

@@ -8,7 +8,29 @@ from project_interfaces.srv import PoseRequest
 
 class PlannerNode(Node):
     """
-    Ros integration of given code
+    Planner based on closest point to goal along cardioidal horizon, accounting for 2 ultrasonic sensors.
+
+    Parameters
+    ----------
+    freq: double
+        Frequency of instantaneous waypoint command publishing
+    obstacle_threshold: double
+        Distance that an obstacle must be detected in to be considered an obstruction
+
+    Topics
+    ------
+    goal_waypoint: L{project_interfaces.Waypoint} message
+        Recieves waypoint for the robot to path to
+    ultrasonic_distances: L{project_interfaces.UltrasonicDistances} message
+        Recieves distances read by left/right ultransonic distance meters
+    command_send: L{project_interfaces.SerialCommand} message
+        Publishes serial command indicating instantaneous waypoint for the robot to move towards
+
+    Services
+    --------
+    get_pose: L{project_interfaces.PoseRequest} service
+        Queries current time and recieves robot's predicted position based on latest velocity estimate
+
     """
     def __init__(self):
         super().__init__('planner')
@@ -53,10 +75,6 @@ class PlannerNode(Node):
             out_msg.id, out_msg.p1, out_msg.p2 = 101, px, py
             self.cmd_pub.publish(out_msg)
 
-    
-
-
-        
 
 def main(args=None):
     rclpy.init(args=args)
