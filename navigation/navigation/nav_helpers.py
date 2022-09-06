@@ -20,10 +20,10 @@ class CardioidPlanner:
             if (p[1] <= 0 and self.left) or (p[1] >= 0 and self.right):
                 # Find euclidean distance from cardioid point to goal
                 p_dist2 = (p[0]*math.cos(pose[2]+p[1]) + pose[0] - goal[0])**2 + \
-                         (p[0]*math.cos(pose[2]+p[1]) + pose[0] - goal[0])**2 
+                         (p[0]*math.sin(pose[2]+p[1]) + pose[0] - goal[0])**2 
                 if p_dist2 < min_dist2: min_dist2, min_point = p_dist2, p
 
-        return min_point
+        return min_point[0]*math.cos(min_point[1]), min_point[0]*math.sin(min_point[1])
 
 
 class TentaclePlanner:
