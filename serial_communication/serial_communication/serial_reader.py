@@ -56,7 +56,7 @@ class SerialReaderNode(Node):
         self.command_pub = self.create_publisher(SerialCommand, 'command_send', 10)
         self.resync_pub = self.create_publisher(UInt8, 'serial_resync', 10)
         self.us_pub = self.create_publisher(UltrasonicDistances, 'ultrasonic_distances', 10)
-        self.cmd_pub = self.create_publisher(RobotVelocity, 'encoder_vel', 10)
+        self.vel_pub = self.create_publisher(RobotVelocity, 'encoder_vel', 10)
 
     def timer_callback(self):
         # Publish update whenever there is data in the buffer
@@ -75,6 +75,7 @@ class SerialReaderNode(Node):
             else:
                 # Publish data to topic
                 _, id, p1, p2, _ = struct.unpack('>3sBff3s', in_bytes)
+                print('recieved', id, p1, p2)
 
                 # Resynchronize sent serial bytes for PSoC
                 if id == 90: 
@@ -83,7 +84,7 @@ class SerialReaderNode(Node):
                     self.resync_pub.publish(msg)
                 
                 # Linear/angular velocity from wheel encoders
-                elif id == 999: # TODO: correct code
+                elif id == 10:
                     msg = RobotVelocity()
                     msg.v, msg.w = p1, p2
                     self.vel_pub.publish(msg)

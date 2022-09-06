@@ -2,7 +2,7 @@ import rclpy
 import time
 import math
 from rclpy.node import Node
-from project_interfaces.msg import RobotVelocity
+from project_interfaces.msg import RobotVelocity, RobotPose
 from project_interfaces.srv import PoseRequest
 
 class EncoderPredictorNode(Node):
@@ -30,9 +30,15 @@ class EncoderPredictorNode(Node):
         self.v, self.w = 0.0, 0.0  # Last recorded velocity
         self.t = time.time()  # Time of last recorded velocity
 
+        # ROS2 Parameters
+        self.declare_parameter('frequency', 30.0)
+        self.freq = self.get_parameter('frequency').get_parameter_value().double_value
+
         # Important objects
         self.sub = self.create_subscription(RobotVelocity, 'encoder_vel', self.vel_callback, 10)
-        self.pose_srv = self.create_service(PoseRequest, 'get_pose', self.request_callback)
+        self.pose_pub = self.create_publisher(RobotPose, 'pose_est',10)
+        self.timer = self.create_timer(1/self.freq, self.timer_callback)
+        self.out_msg = RobotPose()
 
     def predict_pose(self, t):
         """
@@ -75,10 +81,12 @@ class EncoderPredictorNode(Node):
         self.v, self.w = msg.v, msg.w
         self.t = time.time()
 
-    def request_callback(self, request, response):
+    def timer_callback(self):
         # Extrapolate pose from velocity and request time
-        response.pose.x, response.pose.y, response.pose.th = self.predict_pose(request.time)
-        return response
+        #self.get_logger().info('pose request recieved')
+        self.out_msg.x, self.out_msg.y, self.out_msg.th = self.predict_pose(time.time())
+        #self.get_logger().info('pose calculated')
+        self.pose_pub.publish(self.out_msg)
 
 
 def main(args=None):
