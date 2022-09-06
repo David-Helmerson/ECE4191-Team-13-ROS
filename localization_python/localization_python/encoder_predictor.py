@@ -30,7 +30,7 @@ class EncoderPredictorNode(Node):
             a = 2*self.v/self.w*math.sin(phi)
             x = self.pose[0] + a*math.cos(self.pose[2]+phi)
             y = self.pose[1] + a*math.sin(self.pose[2]+phi)
-            th = self.pose[2] + 2*phi
+            th = (self.pose[2] + 2*phi) % 2*math.pi
         return x, y, th
 
     def vel_callback(self, msg):
