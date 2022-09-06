@@ -25,10 +25,10 @@ class PlannerNode(Node):
         self.pose_client = self.create_client(PoseRequest, 'get_pose')
         while not self.pose_client.wait_for_service(timeout_sec=0.5):
             self.get_logger().info('pose server not available, waiting..')
-        self.pose_req = PoseRequest()
+        self.pose_req = PoseRequest.Request()
 
-        self.goal_sub = self.create_subscription(Waypoint, 'goal_waypoint', self.goal_callback)
-        self.us_sub = self.create_subscription(UltrasonicDistances, 'us_dists', self.us_callback)
+        self.goal_sub = self.create_subscription(Waypoint, 'goal_waypoint', self.goal_callback, 10)
+        self.us_sub = self.create_subscription(UltrasonicDistances, 'us_dists', self.us_callback, 10)
         self.cmd_pub = self.create_publisher(SerialCommand, 'command_send', 10)
         self.tentacle_timer = self.create_timer(1/self.freq, self.tentacle_callback)
 

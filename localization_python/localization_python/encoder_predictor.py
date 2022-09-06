@@ -12,8 +12,8 @@ class EncoderPredictorNode(Node):
     def __init__(self):
         super().__init__('encoder_predictor')
 
-        self.pose = (0, 0, 0)  # Pose is x, y, th
-        self.v, self.w = 0, 0  # Last recorded velocity
+        self.pose = (0.0, 0.0, 0.0)  # Pose is x, y, th
+        self.v, self.w = 0.0, 0.0  # Last recorded velocity
         self.t = time.time()  # Time of last recorded velocity
 
         # Important objects
@@ -21,11 +21,16 @@ class EncoderPredictorNode(Node):
         self.pose_srv = self.create_service(PoseRequest, 'get_pose', self.request_callback)
 
     def predict_pose(self, t):
-        phi = self.w*(t-self.t)/2
-        a = 2*self.v/self.w*math.sin(phi)
-        x = self.pose[0] + a*math.cos(self.pose[2]+phi)
-        y = self.pose[1] + a*math.sin(self.pose[2]+phi)
-        th = self.pose[2] + 2*phi
+        if self.w == 0:
+            x = self.pose[0] + self.v*math.cos(self.pose[2])
+            y = self.pose[1] + self.v*math.sin(self.pose[2])
+            th = self.pose[2]
+        else:
+            phi = self.w*(t-self.t)/2
+            a = 2*self.v/self.w*math.sin(phi)
+            x = self.pose[0] + a*math.cos(self.pose[2]+phi)
+            y = self.pose[1] + a*math.sin(self.pose[2]+phi)
+            th = self.pose[2] + 2*phi
         return x, y, th
 
     def vel_callback(self, msg):
@@ -36,7 +41,7 @@ class EncoderPredictorNode(Node):
 
     def request_callback(self, request, response):
         # Extrapolate pose from velocity and request time
-        response.x, response.y, response.th = self.predict_pose(request.time)
+        response.pose.x, response.pose.y, response.pose.th = self.predict_pose(request.time)
         return response
 
 def main(args=None):

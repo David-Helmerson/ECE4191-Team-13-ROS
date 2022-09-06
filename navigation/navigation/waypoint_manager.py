@@ -15,12 +15,12 @@ class WaypointManagerNode(Node):
         self.freq = self.get_parameter('frequency').get_parameter_value().double_value
 
         # Important objects
-        self.wp_list = [(1, 1), (2, 2)]
+        self.wp_list = [(1.0, 1.0), (2.0, 2.0)]
 
         self.pose_client = self.create_client(PoseRequest, 'get_pose')
         while not self.pose_client.wait_for_service(timeout_sec=0.5):
             self.get_logger().info('pose server not available, waiting..')
-        self.pose_req = PoseRequest()
+        self.pose_req = PoseRequest.Request()
 
         self.pub = self.create_publisher(Waypoint, 'goal_waypoint', 10)
         self.timer = self.create_timer(1/self.freq, self.timer_callback)
@@ -33,7 +33,7 @@ class WaypointManagerNode(Node):
 
     def get_pose(self):
         self.pose_req.time = time.time()
-        self.future = self.cli.call_async(self.req)
+        self.future = self.pose_client.call_async(self.pose_req)
         rclpy.spin_until_future_complete(self, self.future)
         return self.future.result().pose
 
