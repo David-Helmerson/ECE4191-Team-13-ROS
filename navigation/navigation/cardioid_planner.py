@@ -6,7 +6,7 @@ from geometry_msgs.msg import Twist
 from project_interfaces.msg import RobotPose, SerialCommand, UltrasonicDistances, Waypoint
 from project_interfaces.srv import PoseRequest
 
-class PlannerNode(Node):
+class CardioidNode(Node):
     """
     Planner based on closest point to goal along cardioidal horizon, accounting for 2 ultrasonic sensors.
 
@@ -33,7 +33,7 @@ class PlannerNode(Node):
 
     """
     def __init__(self):
-        super().__init__('planner')
+        super().__init__('cardioid_planner')
         
         # ROS2 parameters
         self.declare_parameter('freq', 15.0)
@@ -78,9 +78,9 @@ class PlannerNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    planner = PlannerNode()
-    rclpy.spin(planner)
-    planner.destroy_node()
+    cardioid_planner = CardioidNode()
+    rclpy.spin(cardioid_planner)
+    cardioid_planner.destroy_node()
     rclpy.shutdown()
 
 
