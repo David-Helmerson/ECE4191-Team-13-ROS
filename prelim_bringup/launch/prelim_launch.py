@@ -30,7 +30,7 @@ def generate_launch_description():
         Node(
             package='navigation',
             namespace='prelim',
-            executable='tentacle_planner',
-            name='tentacle_planner'
+            executable='stupid_planner',
+            name='stupid_planner'
         ),
     ])

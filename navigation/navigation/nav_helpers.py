@@ -1,6 +1,45 @@
+import time
 import math
 import numpy as np
 
+
+class StupidPlanner:
+    def __init__(self):
+        self.left, self.right = False, False
+        self.ang_thresh = 0.05
+        self.state = 0
+        self.state_2_time = -math.inf
+    
+    def plan(self, px, py, pth, gx, gy):
+        if self.state == 0:
+            if not self.left and self.right:
+                # Angular rotation
+                rx, ry = gx - px, gy - py
+                heading =  math.atan2(ry, rx) - pth
+                if heading < -self.ang_thresh: return 0, 0.2
+                elif heading < self.ang_thresh: return 0, -0.2
+                else: return 0.1, 0.0
+
+            # rotate to avoid obstacles
+            elif self.right: 
+                self.state = 1
+                return 0, 0.2
+            elif self.left: 
+                self.state = 1
+                return 0, -0.2
+
+        elif self.state == 1:
+            if self.right: 
+                return 0, 0.2
+            elif self.left: 
+                return 0, -0.2
+            else:
+                self.state = 2
+                self.state_2_time = time.time()
+                return 0.1, 0.0
+
+        elif self.state == 2: return 0.1, 0.0
+        
 
 class CardioidPlanner:
     """
