@@ -70,9 +70,9 @@ class CardioidNode(Node):
     def planner_callback(self):
         if self.goal_wp is not None:
             pose = self.get_pose()
-            px, py = self.planner.plan(self.goal_wp.x, self.goal_wp.y, 0, pose.x, pose.y, pose.th)
+            w, w = self.planner.plan_linag(self.goal_wp.x, self.goal_wp.y, 0, pose.x, pose.y, pose.th)
             out_msg = SerialCommand()
-            out_msg.id, out_msg.p1, out_msg.p2 = 101, px, py
+            out_msg.id, out_msg.p1, out_msg.p2 = 8, v, w
             self.cmd_pub.publish(out_msg)
 
 
