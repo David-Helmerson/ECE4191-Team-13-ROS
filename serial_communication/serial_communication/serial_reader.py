@@ -84,7 +84,7 @@ class SerialReaderNode(Node):
                     self.resync_pub.publish(msg)
                 
                 # Linear/angular velocity from wheel encoders
-                elif id == 10:
+                elif id == 8:
                     msg = RobotVelocity()
                     msg.v, msg.w = p1, p2
                     self.vel_pub.publish(msg)
