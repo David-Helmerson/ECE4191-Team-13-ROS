@@ -40,7 +40,7 @@ class TentacleNode(Node):
     def tentacle_callback(self):
         if self.goal_wp is not None and self.pose is not None:
             v, w = self.tentacle_planner.plan(self.goal_wp.x, self.goal_wp.y, 0, self.pose.x, self.pose.y, self.pose.th)
-            self.out_msg.id, self.out_msg.p1, self.out_msg.p2 = 101, v, w
+            self.out_msg.id, self.out_msg.p1, self.out_msg.p2 = 8, v, w
             self.cmd_pub.publish(self.out_msg)
 
     
