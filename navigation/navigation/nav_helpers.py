@@ -45,6 +45,10 @@ class CardioidPlanner:
 
         return min_point[0]*math.cos(min_point[1]), min_point[0]*math.sin(min_point[1])
 
+    def plan_linang(self, pose, goal, dt):
+        px, py = self.plan(pose, goal)
+        return point_to_linang(px, py, dt)
+
 
 class TentaclePlanner:
     
@@ -95,6 +99,10 @@ class TentaclePlanner:
         return self.tentacles[best_idx]
 
 
+def point_to_linang(px, py, dt):
+    r, w, = (px**2 + py**2)/(2*px*dt), math.atan2(py, px)
+    return w*r, w
+    
 
 def pp_waypoint(path, pos, dist, max_lookahead=math.inf):
     """
