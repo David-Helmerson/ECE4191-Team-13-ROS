@@ -36,7 +36,7 @@ class WaypointManagerNode(Node):
         self.freq = self.get_parameter('frequency').get_parameter_value().double_value
 
         # Important objects
-        self.wp_list = [(1.0, 1.0), (2.0, 2.0)]
+        self.wp_list = [(0.0, 1.0), (1.0, 1.0)]
         self.pose = None
 
         self.pose_sub = self.create_subscription(RobotPose, 'pose_est', self.pose_callback, 10)

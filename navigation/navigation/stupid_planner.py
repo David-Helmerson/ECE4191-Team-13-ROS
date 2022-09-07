@@ -24,7 +24,7 @@ class StupidNode(Node):
         self.out_msg = SerialCommand()
         self.last_msg = SerialCommand()
         self.last_send_time = -math.inf
-        self.stupid_planner = StupidPlanner(1/self.freq)
+        self.stupid_planner = StupidPlanner()
 
         self.goal_sub = self.create_subscription(Waypoint, 'goal_waypoint', self.goal_callback, 10)
         self.pose_sub = self.create_subscription(RobotPose, 'pose_est', self.pose_callback, 10)
@@ -40,12 +40,12 @@ class StupidNode(Node):
         self.stupid_planner.left, self.stupid_planner.right = msg.left < thresh, msg.right < thresh
 
     def stupid_callback(self):
-        #self.get_logger().info('stupid callback ' + str(self.last_send_time - time.time()) + ' ' + )
+        self.get_logger().info('state ' + str(self.stupid_planner.state))
         # and ((self.out_msg != self.last_msg) or (time.time() - self.last_send_time  > 1))
         if self.goal_wp is not None and self.pose is not None and (self.stupid_planner.state != 2):
             #self.get_logger().info('stupid pub')
-            v, w = self.stupid_planner.plan(self.goal_wp.x, self.goal_wp.y, 0, self.pose.x, self.pose.y, self.pose.th)
-            self.out_msg.id, self.out_msg.p1, self.out_msg.p2 = 8, v, w
+            v, w = self.stupid_planner.plan(self.pose.x, self.pose.y, self.pose.th, self.goal_wp.x, self.goal_wp.y)
+            self.out_msg.id, self.out_msg.p1, self.out_msg.p2 = 8, float(v), float(w)
             self.cmd_pub.publish(self.out_msg)
             self.last_msg, self.last_send_time = self.out_msg, time.time()
 

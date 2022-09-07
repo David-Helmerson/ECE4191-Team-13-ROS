@@ -63,16 +63,22 @@ class EncoderPredictorNode(Node):
         """
         # Predict linear motion
         if self.w == 0:
-            x = self.pose[0] + self.v*math.cos(self.pose[2])
-            y = self.pose[1] + self.v*math.sin(self.pose[2])
+            x = self.pose[0] + self.v*(t-self.t)*math.cos(self.pose[2])
+            y = self.pose[1] + self.v*(t-self.t)*math.sin(self.pose[2])
             th = self.pose[2]
         # Predict angular motion
         else:
+            '''
             phi = self.w*(t-self.t)/2
             a = 2*self.v/self.w*math.sin(phi)
             x = self.pose[0] + a*math.cos(self.pose[2]+phi)
             y = self.pose[1] + a*math.sin(self.pose[2]+phi)
             th = (self.pose[2] + 2*phi) % (2*math.pi)
+            '''
+            phi = self.w*(t-self.t)
+            x = self.pose[0] + self.v*(t-self.t)*math.cos(self.pose[2])
+            y = self.pose[1] + self.v*(t-self.t)*math.sin(self.pose[2])
+            th = (self.pose[2] + phi) % (2*math.pi)
         return x, y, th
 
     def vel_callback(self, msg):
@@ -84,9 +90,9 @@ class EncoderPredictorNode(Node):
     def timer_callback(self):
         # Extrapolate pose from velocity and request time
         #self.get_logger().info('pose request recieved'
-        self.get_logger().info('Predicting pose with pose ' + str(self.pose) + ' v,w: ' + str(self.v) + str(self.w) + ' dt: ' + str(time.time()-self.t))
+        #self.get_logger().info('Predicting pose with pose ' + str(self.pose) + ' v,w: ' + str(self.v) + str(self.w) + ' dt: ' + str(time.time()-self.t))
         self.out_msg.x, self.out_msg.y, self.out_msg.th = self.predict_pose(time.time())
-        self.get_logger().info('Calculated: ' + str((self.out_msg.x, self.out_msg.y, self.out_msg.th)))
+        #self.get_logger().info('Calculated: ' + str((self.out_msg.x, self.out_msg.y, self.out_msg.th)))
         #self.get_logger().info('pose calculated')
         self.pose_pub.publish(self.out_msg)
 

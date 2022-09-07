@@ -45,7 +45,7 @@ class SerialSenderNode(Node):
 
     def command_callback(self, msg):
         ser = self.start_bytes + struct.pack('<Bff', msg.id, msg.p1, msg.p2) + self.end_bytes
-        print(ser)
+        self.get_logger().info(str(ser))
         self.serial.write(ser)
 
     def sync_callback(self, msg):

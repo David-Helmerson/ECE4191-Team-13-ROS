@@ -12,12 +12,12 @@ class StupidPlanner:
     
     def plan(self, px, py, pth, gx, gy):
         if self.state == 0:
-            if not self.left and self.right:
+            if not self.left and not self.right:
                 # Angular rotation
                 rx, ry = gx - px, gy - py
-                heading =  math.atan2(ry, rx) - pth
+                heading =  (math.atan2(ry, rx) - pth) % (2*math.pi)
                 if heading < -self.ang_thresh: return 0, 0.2
-                elif heading < self.ang_thresh: return 0, -0.2
+                elif heading > self.ang_thresh: return 0, -0.2
                 else: return 0.1, 0.0
 
             # rotate to avoid obstacles
