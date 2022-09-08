@@ -25,6 +25,7 @@ class StupidNode(Node):
         self.last_msg = SerialCommand()
         self.last_send_time = -math.inf
         self.stupid_planner = StupidPlanner()
+        self.state_2_time = 1.0
 
         self.goal_sub = self.create_subscription(Waypoint, 'goal_waypoint', self.goal_callback, 10)
         self.pose_sub = self.create_subscription(RobotPose, 'pose_est', self.pose_callback, 10)
@@ -49,7 +50,7 @@ class StupidNode(Node):
             self.cmd_pub.publish(self.out_msg)
             self.last_msg, self.last_send_time = self.out_msg, time.time()
 
-        if self.stupid_planner.state == 2 and (time.time() - self.stupid_planner.state_2_time) > 0.5:
+        if self.stupid_planner.state == 2 and (time.time() - self.stupid_planner.state_2_time) > self.state_2_time:
             self.stupid_planner.state = 0
 
 

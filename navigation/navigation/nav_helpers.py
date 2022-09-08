@@ -10,7 +10,7 @@ class StupidPlanner:
         self.ang_thresh = 0.1
         self.state = 0
         self.state_2_time = -math.inf
-        self.v, self.w = 0.1, 0.5
+        self.v, self.w = 0.1, 0.2
 
     def plan(self, px, py, pth, gx, gy):
         
@@ -19,7 +19,8 @@ class StupidPlanner:
             if not self.left and not self.right:
                 rx, ry = gx - px, gy - py
                 heading =  (math.atan2(ry, rx) - pth) % (2*math.pi)
-                if heading > self.ang_thresh or heading < 2*math.pi - self.ang_thresh: 
+                print(heading)
+                if heading < self.ang_thresh or heading > 2*math.pi - self.ang_thresh: 
                     return self.v, 0.0
                 elif heading < math.pi: return 0.0, self.w
                 else: return 0.0, -self.w
