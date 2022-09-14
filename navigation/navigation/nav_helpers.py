@@ -10,7 +10,8 @@ class StupidPlanner:
         self.ang_thresh = 0.1
         self.state = 0
         self.state_2_time = -math.inf
-        self.v, self.w = 0.1, 0.2
+        self.state_3_time = -math.inf
+        self.v, self.w = 0.1, 0.4
 
     def plan(self, px, py, pth, gx, gy):
         

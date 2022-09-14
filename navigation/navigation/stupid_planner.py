@@ -15,7 +15,7 @@ class StupidNode(Node):
         
         # ROS2 parameters
         self.declare_parameter('freq', 15.0)
-        self.declare_parameter('obstacle_threshold', 0.05)
+        self.declare_parameter('obstacle_threshold', 0.2)
         self.freq = self.get_parameter('freq').get_parameter_value().double_value
 
         # Important objects
@@ -26,6 +26,7 @@ class StupidNode(Node):
         self.last_send_time = -math.inf
         self.stupid_planner = StupidPlanner()
         self.state_2_time = 1.0
+        self.state_3_time = 10.0
 
         self.goal_sub = self.create_subscription(Waypoint, 'goal_waypoint', self.goal_callback, 10)
         self.pose_sub = self.create_subscription(RobotPose, 'pose_est', self.pose_callback, 10)
@@ -33,7 +34,12 @@ class StupidNode(Node):
         self.cmd_pub = self.create_publisher(SerialCommand, 'command_send', 10)
         self.stupid_timer = self.create_timer(1/self.freq, self.stupid_callback)
 
-    def goal_callback(self, msg): self.goal_wp = msg
+    def goal_callback(self, msg): 
+        if self.goal_wp is not None and msg != self.goal_wp:
+            self.stupid_planner.state = 3
+            self.stupid_planner.state_3_time = time.time()
+        self.goal_wp = msg
+
     def pose_callback(self, msg): self.pose = msg
     
     def us_callback(self, msg):
@@ -43,6 +49,7 @@ class StupidNode(Node):
     def stupid_callback(self):
         self.get_logger().info('state ' + str(self.stupid_planner.state))
         # and ((self.out_msg != self.last_msg) or (time.time() - self.last_send_time  > 1))
+
         if self.goal_wp is not None and self.pose is not None and (self.stupid_planner.state != 2):
             #self.get_logger().info('stupid pub')
             v, w = self.stupid_planner.plan(self.pose.x, self.pose.y, self.pose.th, self.goal_wp.x, self.goal_wp.y)
@@ -51,6 +58,9 @@ class StupidNode(Node):
             self.last_msg, self.last_send_time = self.out_msg, time.time()
 
         if self.stupid_planner.state == 2 and (time.time() - self.stupid_planner.state_2_time) > self.state_2_time:
+            self.stupid_planner.state = 0
+
+        if self.stupid_planner.state == 3 and (time.time() - self.stupid_planner.state_3_time) > self.state_3_time:
             self.stupid_planner.state = 0
 
 

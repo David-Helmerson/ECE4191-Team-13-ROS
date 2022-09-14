@@ -26,7 +26,7 @@ class EncoderPredictorNode(Node):
         super().__init__('encoder_predictor')
 
         # Initial state of robot
-        self.pose = (0.0, 0.0, math.pi/2)  # Pose is x, y, th
+        self.pose = (0.3, 0.2, math.pi/2)  # Pose is x, y, th
         self.v, self.w = 0.0, 0.0  # Last recorded velocity
         self.t = time.time()  # Time of last recorded velocity
 
