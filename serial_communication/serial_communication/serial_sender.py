@@ -39,7 +39,7 @@ class SerialSenderNode(Node):
 
         # Important objects
         print(port_num, baud_rate)
-        self.serial = serial.Serial(port_num, baud_rate, parity='PARITY_EVEN')
+        self.serial = serial.Serial(port_num, baud_rate, parity=serial.PARITY_EVEN)
         self.sub = self.create_subscription(SerialCommand, 'command_send', self.command_callback, 10)
         self.resync_sub = self.create_subscription(UInt8, 'serial_resync', self.sync_callback, 10)
 
