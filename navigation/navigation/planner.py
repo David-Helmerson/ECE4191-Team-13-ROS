@@ -66,7 +66,7 @@ class PlannerNode(Node):
         self.map = msg
         self.update_path()
 
-    def map_callback(self, msg):
+    def path_callback(self, msg):
         self.path_waypoints = msg
 
     def update_path(self):

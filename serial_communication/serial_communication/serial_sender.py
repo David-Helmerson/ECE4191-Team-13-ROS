@@ -39,13 +39,13 @@ class SerialSenderNode(Node):
 
         # Important objects
         print(port_num, baud_rate)
-        self.serial = serial.Serial(port_num, baud_rate, parity='PARITY_EVEN')
+        self.serial = serial.Serial(port_num, baud_rate, parity=serial.PARITY_EVEN)
         self.sub = self.create_subscription(SerialCommand, 'command_send', self.command_callback, 10)
         self.resync_sub = self.create_subscription(UInt8, 'serial_resync', self.sync_callback, 10)
 
     def command_callback(self, msg):
         ser = self.start_bytes + struct.pack('<Bff', msg.id, msg.p1, msg.p2) + self.end_bytes
-        print(ser)
+        self.get_logger().info(str(ser))
         self.serial.write(ser)
 
     def sync_callback(self, msg):
