@@ -17,25 +17,11 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-<<<<<<< HEAD
-find_package(builtin_interfaces REQUIRED)
-=======
 find_package(std_msgs REQUIRED)
->>>>>>> 666965ef3b631989ad861829c3c72e40781609d3
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-<<<<<<< HEAD
-  ${msg_files}
-  DEPENDENCIES builtin_interfaces std_msgs
-  ADD_LINTER_TESTS
-)
-
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION include/${PROJECT_NAME}
-)
-=======
   "msg/MousePos.msg"
   "msg/RobotPose.msg"
   "msg/RobotVelocity.msg"
@@ -44,7 +30,6 @@ install(DIRECTORY include/${PROJECT_NAME}/
   "msg/WaypointPath.msg"
   "srv/PoseRequest.srv"
   DEPENDENCIES std_msgs)
->>>>>>> 666965ef3b631989ad861829c3c72e40781609d3
 
 
 if(BUILD_TESTING)

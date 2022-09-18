@@ -2,7 +2,7 @@ import numpy as np
 import cv2 as cv
 import glob
 
-def get_calib_param()
+def get_calib_param():
     # termination criteria
     criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
@@ -30,7 +30,7 @@ def get_calib_param()
     ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
     return  ret, mtx, dist, rvecs, tvecs, objpoints, imgpoints
 
-def undst(filename, mtx = mtx, dist = dist) #filename in str e.g. 'image.jpg'
+def undst(filename, mtx, dist): #filename in str e.g. 'image.jpg'
     # Undistortion
     img = cv.imread(filename)
     h,  w = img.shape[:2]
@@ -43,7 +43,7 @@ def undst(filename, mtx = mtx, dist = dist) #filename in str e.g. 'image.jpg'
     cv.imwrite('calibresult.png', dst)
 
 
-def calib_error(objpoints = objpoints, imgpoints = imgpoints, rvecs = rvecs, tvecs = tvecs, mtx = mtx, dist = dist)
+def calib_error(objpoints, imgpoints, rvecs, tvecs, mtx, dist):
     # Re-projection Error 
     #the smaller and closer to 0, the better the accuracy
     mean_error = 0
@@ -54,7 +54,7 @@ def calib_error(objpoints = objpoints, imgpoints = imgpoints, rvecs = rvecs, tve
     print( "total error: {}".format(mean_error/len(objpoints)) )
 
 
-def matcher(train,query) #train and query filename in str type e.g. 'image.jpg'
+def matcher(train,query): #train and query filename in str type e.g. 'image.jpg'
     img_train = cv.imread(train, cv.IMREAD_GRAYSCALE)
     img_query = cv.imread(query, cv.IMREAD_GRAYSCALE)
     orb = cv.ORB_create()
@@ -71,7 +71,7 @@ def triangulation(kp1, kp2, T_1w, T_2w):
     kp2_3D = np.ones((3, kp2.shape[0]))
     kp1_3D[0], kp1_3D[1] = kp1[:, 0].copy(), kp1[:, 1].copy()
     kp2_3D[0], kp2_3D[1] = kp2[:, 0].copy(), kp2[:, 1].copy()
-    X = cv2.triangulatePoints(T_1w[:3], T_2w[:3], kp1_3D[:2], kp2_3D[:2])
+    X = cv.triangulatePoints(T_1w[:3], T_2w[:3], kp1_3D[:2], kp2_3D[:2])
     X /= X[3]
     X1 = T_1w[:3] @ X
     X2 = T_2w[:3] @ X

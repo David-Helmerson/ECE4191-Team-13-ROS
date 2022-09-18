@@ -6,6 +6,8 @@ from geometry_msgs.msg import Twist
 import cv2
 import numpy as np
 
+# ROS2 camera reading node is done via: ros2 run image_tools cam2image
+
 class DepthPerceptionNode(Node):
 
     def __init__(self):
@@ -17,7 +19,6 @@ class DepthPerceptionNode(Node):
         self.cam_sub = self.create_subscription(Image, 'image', self.image_callback, 10)
         self.pose_sub = self.create_subscription(Twist, 'pose', self.image_callback, 10)
         self.bridge = CvBridge()
-        self.stereo = cv2.StereoBM_create(16, 15)
         self.last_image = None
         self.last_pose = None
 
@@ -25,12 +26,9 @@ class DepthPerceptionNode(Node):
         self.last_pose = [msg.linear.x, msg.linear.y, msg.angular.z]
 
     def image_callback(self, msg):
-        print('hey')
-        img = cv2.cvtColor(self.bridge.imgmsg_to_cv2(msg), cv2.COLOR_RGB2GRAY)
-        print(type(img))
+        img = self.bridge.imgmsg_to_cv2(msg)
         if self.last_image is not None:
-            disparity = self.stereo.compute(self.last_image, img)
-            print('recieved', type(disparity))
+            pass
 
         self.last_image = img
         
