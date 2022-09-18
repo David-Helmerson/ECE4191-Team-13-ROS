@@ -3,7 +3,7 @@ import serial
 from rclpy.node import Node
 import struct
 from std_msgs.msg import UInt8
-from project_interfaces.msg import SerialCommand
+from project_interfaces.msg import SerialCommand, RobotVelocity
 
 class SerialReaderNode(Node):
     """
@@ -47,6 +47,7 @@ class SerialReaderNode(Node):
         # TODO: Create publishers for each command
         self.command_pub = self.create_publisher(SerialCommand, 'command_send', 10)
         self.resync_pub = self.create_publisher(UInt8, 'serial_resync', 10)
+        self.vel_pub = self.create_publisher(RobotVelocity, 'encoder_vel', 10)
 
     def timer_callback(self):
         # Publish update whenever there is data in the buffer
@@ -63,14 +64,21 @@ class SerialReaderNode(Node):
                 self.command_pub.publish(msg)
 
             else:
-                test1, id, p1, p2, test2 = struct.unpack('>3sBff3s', in_bytes)
-                print('data:', test1, id, p1, p2, test2)
+                # Publish data to topic
+                _, id, p1, p2, _ = struct.unpack('>3sBff3s', in_bytes)
 
-                # TODO: Publish p1, p2 to relevant topics
+                # Resynchronize sent serial bytes for PSoC
                 if id == 90: 
                     msg = UInt8()
                     msg.data = int(p1)
                     self.resync_pub.publish(msg)
+                
+                # Linear/angular velocity from wheel encoders
+                elif id == 999: # TODO: correct code
+                    msg = RobotVelocity()
+                    msg.v, msg.w = p1, p2
+                    self.vel_pub.publish(msg)
+                    
 
 
 def main(args=None):

@@ -25,7 +25,12 @@ find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/MousePos.msg"
+  "msg/RobotPose.msg"
+  "msg/RobotVelocity.msg"
   "msg/SerialCommand.msg"
+  "msg/Waypoint.msg"
+  "msg/WaypointPath.msg"
+  "srv/PoseRequest.srv"
   DEPENDENCIES std_msgs)
 
 ament_export_dependencies(rosidl_default_runtime)
