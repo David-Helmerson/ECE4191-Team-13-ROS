@@ -19,6 +19,7 @@ class DepthPerceptionNode(Node):
         self.cam_sub = self.create_subscription(Image, 'image', self.image_callback, 10)
         self.pose_sub = self.create_subscription(Twist, 'pose', self.image_callback, 10)
         self.bridge = CvBridge()
+        self.orb = cv2.ORB_create()
         self.last_image = None
         self.last_pose = None
 
