@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'depth_estimation = perception.camera_reader:main'
+            'depth_perception = perception.depth_perception:main'
         ],
     },
 )
