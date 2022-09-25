@@ -15,7 +15,7 @@ class DepthPerceptionNode(Node):
         super().__init__('depth_perception')
 
         # ROS2 parameters
-        self.declare_parameter('display_matches', False)
+        self.declare_parameter('display_matches', True)
 
         # Important objects
         self.cam_sub = self.create_subscription(Image, 'image', self.image_callback, 10)
@@ -23,7 +23,7 @@ class DepthPerceptionNode(Node):
         self.match_pub = self.create_publisher(Image, 'matched_points', 10)
         self.bridge = CvBridge()
         self.orb = cv2.ORB_create()
-        self.feature_matcher = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+        self.matcher = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
         self.last_image = None
         self.last_pose = None
         self.camera_matrix = None
@@ -35,15 +35,19 @@ class DepthPerceptionNode(Node):
     def feature_matcher(self, img1, img2):
         kp1, des1 = self.orb.detectAndCompute(img1, None)
         kp2, des2 = self.orb.detectAndCompute(img2, None)
-        matches = self.feature_matcher.match(des1, des2)
-        matches = sorted(matches, key=lambda x: x.distance)
+        matches = None
+
+        # Handle no detected features case
+        if des1 is not None and des2 is not None:
+            matches = self.matcher.match(des1, des2)
+            matches = sorted(matches, key=lambda x: x.distance)
 
         # Publish matches image if specified
-        if self.get_parameter('display_matches').bool_value:
+        if self.get_parameter('display_matches').get_parameter_value() and matches:
             match_img = cv2.drawMatches(img1,kp1,img2,kp2,matches,None,flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-            msg = CvBridge.cv2_to_imgmsg(match_img)
+            msg = self.bridge.cv2_to_imgmsg(match_img, 'rgb8')
             self.match_pub.publish(msg)
-    
+
         return matches
 
 
@@ -68,8 +72,8 @@ class DepthPerceptionNode(Node):
         self.last_pose = [msg.linear.x, msg.linear.y, msg.angular.z]
 
     def image_callback(self, msg):
-        img = self.bridge.imgmsg_to_cv2(msg)
-        if self.last_image is not None and self.last_pose is not None:
+        img = self.bridge.imgmsg_to_cv2(msg, 'rgb8')
+        if self.last_image is not None:
             features = self.feature_matcher(img, self.last_image)
             #cv2.drawMatches(img, kp1,self.last_image,kp2, features, None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
     
