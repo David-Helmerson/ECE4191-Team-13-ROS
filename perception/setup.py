@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'depth_perception = perception.depth_perception:main'
+            'depth_perception = perception.depth_perception:main',
+            'marble_detector = perception.marble_detection:main'
         ],
     },
 )
