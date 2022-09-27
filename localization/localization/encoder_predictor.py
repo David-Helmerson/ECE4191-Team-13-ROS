@@ -36,7 +36,7 @@ class EncoderPredictorNode(Node):
 
         # Important objects
         self.sub = self.create_subscription(RobotVelocity, 'encoder_vel', self.vel_callback, 10)
-        self.pose_pub = self.create_publisher(RobotPose, 'pose_est',10)
+        self.pose_pub = self.create_publisher(RobotPose, 'pose_est', 10)
         self.timer = self.create_timer(1/self.freq, self.timer_callback)
         self.out_msg = RobotPose()
 
