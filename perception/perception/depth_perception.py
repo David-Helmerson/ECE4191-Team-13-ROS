@@ -11,6 +11,7 @@ import time
 from perception.cloud_tools import create_cloud, create_cloud_from_list
 
 # ROS2 camera reading node is done via: ros2 run image_tools cam2image
+# Create an odom frame with: ros2 run tf2_ros static_transform_publisher 0 0 0 0 0 0 1 world odom
 
 class DepthPerceptionNode(Node):
 
@@ -96,13 +97,13 @@ class DepthPerceptionNode(Node):
             kp1, kp2 = self.feature_matcher(img, self.last_image)
             pts = self.triangulate(kp1, kp2, pose, self.image_pose)
             cloud_header = Header()
+            cloud_header.stamp = self.get_clock().now().to_msg()
+            cloud_header.frame_id = 'odom'
             cloud_out = create_cloud_from_list(cloud_header, pts)
             self.points_pub.publish(cloud_out)
 
         self.image_time, self.image_pose, self.last_image = t, pose, img
 
-
-        
 
 def main(args=None):
     rclpy.init(args=args)
