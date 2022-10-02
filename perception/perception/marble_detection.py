@@ -1,6 +1,7 @@
 import rclpy
 import cv2
 from rclpy.node import Node
+from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 
 
@@ -24,6 +25,8 @@ class MarbleDetectionNode(Node):
         
         # Important ROS objects
         self.img_sub = self.create_subscription(Image, 'image', self.image_callback, 10)
+
+        self.bridge = CvBridge()
 
     def image_callback(self, msg):
         img = self.bridge.imgmsg_to_cv2(msg, 'rgb8')
