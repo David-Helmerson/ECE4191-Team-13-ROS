@@ -25,7 +25,8 @@ setup(
         'console_scripts': [
             'depth_perception = perception.depth_perception:main',
             'marble_detector = perception.marble_detection:main',
-            'dp_test = perception.dp_testing:main'
+            'dp_test = perception.dp_testing:main',
+            'image_snapshot = perception.image_snapshot'
         ],
     },
 )

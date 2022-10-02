@@ -21,7 +21,7 @@ class MarbleDataCollectorNode(Node):
         super().__init__('dp_test')
 
         self.timer = self.create_timer(0.05, self.timer_callback)
-        self.cam_sub = self.create_subscription(Image, 'image', self.image_callback, 1)
+        self.cam_sub = self.create_subscription(Image, 'snapshot', self.image_callback, 1)
         self.pix_buffer = 5
         self.out_folder = '~/sampling_out'
 

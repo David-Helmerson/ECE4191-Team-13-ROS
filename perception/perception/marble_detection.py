@@ -24,7 +24,7 @@ class MarbleDetectionNode(Node):
         self.declare_parameter('focal_length', 250)  # Focal length is some units???
         
         # Important ROS objects
-        self.img_sub = self.create_subscription(Image, 'image', self.image_callback, 10)
+        self.img_sub = self.create_subscription(Image, 'snap_image', self.image_callback, 10)
 
         self.bridge = CvBridge()
 
