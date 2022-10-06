@@ -20,7 +20,6 @@ class MarbleDataCollectorNode(Node):
     def __init__(self):
         super().__init__('dp_test')
 
-        self.timer = self.create_timer(0.05, self.timer_callback)
         self.cam_sub = self.create_subscription(Image, 'snapshot', self.image_callback, 1)
         self.pix_buffer = 5
         self.out_folder = '~/sampling_out'
@@ -28,7 +27,7 @@ class MarbleDataCollectorNode(Node):
         self.bridge = CvBridge()
 
     def image_callback(self, msg):
-        img = self.bridge.imgmsg_to_cv2(msg, 'rgb8')
+        img = self.bridge.imgmsg_to_cv2(msg, 'passthrough')
         # Detect edges
         edges = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         edges = cv2.GaussianBlur(edges, (5, 5), 0)
@@ -38,17 +37,26 @@ class MarbleDataCollectorNode(Node):
         img_saved = False
         img_i = 0
         label_file = None
-        for c in circles:
-            x0, y0, x1, y1 = (c[i] + j*c[2] + j*self.pix_buffer for i in [0, 1] for j in [-1, 1])
-            cv2.imshow('image', img[x0:x1, y0:y1])
-            inp = int(input('1: magnetic marble, 2: non-magnetic marble, 3: nothing: '))
-            if inp in [1, 2]:
-                if not img_saved:
-                    img_name = 'image_' + str(img_i) + '.jpg'
-                    cv2.imwrite(os.path.join(self.out_folder, 'images', img_name), img)
-                    label_file = open('image_' + str(img_i) + '.txt', 'w')
+        self.get_logger().info(str(circles))
+        if circles:
+            for c in circles[0]:
+                self.get_logger().info(str(c))
+                x0, y0 = (int(c[i] - c[2] - self.pix_buffer) for i in [0, 1])
+                x1, y1 = (int(c[i] + c[2] + self.pix_buffer) for i in [0, 1])
+                self.get_logger().info(' '.join([str(x) for x in [x0, x1, y0, y1]]))
+                if x0 > 0 and x1 < 640 and y0 > 0 and y1 < 240:
+                    cv2.imshow('image', img[x0:x1, y0:y1])
+                    cv2.waitKey(0)
+                    '''
+                    inp = int(input('1: magnetic marble, 2: non-magnetic marble, 3: nothing: '))
+                    if inp in [1, 2]:
+                        if not img_saved:
+                            img_name = 'image_' + str(img_i) + '.jpg'
+                            cv2.imwrite(os.path.join(self.out_folder, 'images', img_name), img)
+                            label_file = open('image_' + str(img_i) + '.txt', 'w')
 
-                label_file.write(' '.join([inp, c[0], c[1], c[2], c[2]]) + '\n')
+                        label_file.write(' '.join([inp, c[0], c[1], c[2], c[2]]) + '\n')
+                    '''
 
 
 def main(args=None):
