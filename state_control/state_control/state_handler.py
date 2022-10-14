@@ -1,5 +1,7 @@
 from asyncio.log import logger
 import math
+import random
+from turtle import width
 import numpy as np
 import rclpy
 from rclpy.node import Node
@@ -57,6 +59,11 @@ class StateMachineNode(Node):
         self.declare_parameter('rot_vel', 0.4)
         self.declare_parameter('orient_thresh', 0.1)
         self.declare_parameter('obtain_thresh', 0.1)
+        self.declare_parameter('explore_ang_thresh', 0.5)
+        self.declare_parameter('explore_vel', 0.12)
+        self.declare_parameter('explore_dist', 0.3)
+        self.declare_parameter('assurance_vel', 0.12)
+        self.declare_parameter('assurance_dist', 0.1)
 
         # Important ROS objects
         self.timer = self.create_timer(0.1, lambda: self.state())  # the single dirtiest hack I've ever written
@@ -72,13 +79,47 @@ class StateMachineNode(Node):
 
         # Interstate variables
         self.rot_t, self.rad_dists = None, []
+        self.explore_angle, self.explore_t = None, None
         self.target_x, self.target_y = None, None
 
 
+    def pose_callback(self, msg): self.x, self.y, self.th = msg.x, msg.y, msg.th
     def clear_vars(self): 
         self.rot_t, self.rad_dists = None, []
         self.target_x, self.target_y = None, None
-    def pose_callback(self, msg): self.x, self.y, self.th = msg.x, msg.y, msg.th
+        self.explore_angle, self.explore_t = None, None
+
+    def determine_explore_angle(self):
+        # TODO: stress test
+        us_thresh = self.get_parameter('us_thresh').get_parameter_value().double_value
+        ang_thresh = self.get_parameter('explore_ang_thresh').get_parameter_value().double_value
+
+        # Find ends of vacant space
+        dists = np.array(self.rad_dists)
+        vacant = np.logical_and(dists[:, 1] > us_thresh, dists[:, 2] > us_thresh)
+        ends = np.argwhere(np.diff(vacant)).squeeze()
+        ends += np.array([(not vacant[0]) ^ i%2 for i in range(len(ends))])
+        # Handle case with no obstruction
+        if np.all(vacant): return random.uniform(0, 2*math.pi)
+
+        # Handle wraparound
+        if vacant[0]:
+            if vacant[-1]: ends = np.roll(ends, 1)
+            else: np.insert(ends, 0, 0)
+        elif vacant[-1]: np.insert(ends, -1, 0)
+
+        # Determine valid explore ranges
+        angs = dists[ends, 0]
+        ranges, widths = [], []
+        for i in range(0, len(angs), 2):
+            a1, a2 = angs[i], angs[i+1]
+            if a1 > a2: a1, a1 -= 2*math.pi
+            if a2 - a1 > 2*ang_thresh:
+                ranges.append((a1 + ang_thresh, a2 - ang_thresh))
+                widths.append((a2 - a1 - 2*ang_thresh))
+
+        range = ranges[np.random.choice(len(ranges), p=widths)]
+        return random.uniform(range[0], range[1])
 
         
     def rotate_and_observe(self):
@@ -105,15 +146,48 @@ class StateMachineNode(Node):
             elif t > 2*math.pi/w: # Complete rotation
                 self.rot_t = None
                 rot_cmd.p2 = 0.0
-                self.state = self.explore_arena
+                self.explore_angle = self.determine_explore_angle()
+                self.state = self.explore_arena_rot
 
         # Publish rotation command
         self.command_pub.publish(rot_cmd)
 
 
-    def explore_arena(self):
-        # TODO
-        self.get_logger().info('STATE: explore_arena')
+    def explore_arena_rot(self):
+        self.get_logger().info('STATE: explore_arena_rot')
+        w_thresh = self.get_parameter('orient_thresh').get_parameter_value().double_value
+        w = self.get_parameter('rot_vel').get_parameter_value().double_value
+
+        heading = (self.th - self.explore_angle) % (2*math.pi)
+        rot_cmd = SerialCommand()
+        rot_cmd.id, rot_cmd.p1, rot_cmd.p2, = 8, 0.0, w*np.sign(heading)
+        self.command_pub.publish(rot_cmd)
+
+        if abs(heading) < w_thresh:
+            self.explore_angle, self.rad_dists = None, None
+            self.state = self.explore_angle_lin
+
+    def explore_arena_lin(self):
+        self.get_logger().info('STATE: explore_arena_lin')
+        us_thresh = self.get_parameter('us_thresh').get_parameter_value().double_value
+        v = self.get_parameter('explore_vel').get_parameter_value().double_value
+        d = self.get_parameter('explore_dist').get_parameter_value().double_value
+        t = self.get_clock().now()
+
+        if self.explore_t is None: self.explore_t = t
+        vel_cmd = SerialCommand()
+        vel_cmd.id, vel_cmd.p2 = 8, 0.0
+
+        if self.us_left < us_thresh or self.us_right < us_thresh:
+            vel_cmd.p1 = 0.0
+            self.clear_vars
+            self.state = self.avoid_obstacle
+
+        elif t - self.explore_t < d/v:
+            vel_cmd.p1 = v
+
+        self.command_pub.publish(vel_cmd)
+
 
 
     def orient_to_marble(self):
@@ -159,8 +233,21 @@ class StateMachineNode(Node):
         self.get_logger().info('STATE: avoid_obstacle')
 
     def refind_marble(self):
-        # TODO
         self.get_logger().info('STATE: refind_marble')
+        w_thresh = self.get_parameter('orient_thresh').get_parameter_value().double_value
+        w = self.get_parameter('rot_vel').get_parameter_value().double_value
+
+        target_th = math.atan2(self.target_x, self.target_y)
+
+        heading = (self.th - target_th) % (2*math.pi)
+        rot_cmd = SerialCommand()
+        rot_cmd.id, rot_cmd.p1, rot_cmd.p2, = 8, 0.0, w*np.sign(heading)
+
+        if abs(heading) < w_thresh:
+            rot_cmd.p2 = 0.0
+            self.state = self.orient_to_marble if len(self.marbles) else self.rotate_and_observe
+
+        self.command_pub.publish(rot_cmd)
 
 
     def move_towards_marble(self):
@@ -196,6 +283,7 @@ class StateMachineNode(Node):
 
             # Marble is close
             elif closest[1] < obtain_thresh:
+                self.clear_vars()
                 self.state = self.assurance_movement
 
             # Publish waypoint command
@@ -203,8 +291,32 @@ class StateMachineNode(Node):
 
 
     def assurance_movement(self):
-        # TODO
         self.get_logger().info('STATE: assurance_movement')
+        v = self.get_parameter('assurance_vel').get_parameter_value().double_value
+        d = self.get_parameter('assurance_dist').get_parameter_value().double_value
+        t = self.get_clock().now()
+
+        if self.explore_t is None: self.explore_t = t
+        vel_cmd = SerialCommand()
+        vel_cmd.id, vel_cmd.p1, vel_cmd.p2 = 8, 0.0, 0.0
+
+        if t - self.explore_t < d/v: vel_cmd.p1 = v
+        self.command_pub.publish(vel_cmd)
+
+        # Just move forward tbh
+        self.clear_vars()
+        self.state = self.activate_manipulator
+
+
+    def activate_manipulator(self):
+        self.get_logger().info('STATE: activate_manipulator')
+        manip_cmd = SerialCommand()
+        manip_cmd.id = 52
+        self.command_pub.publish(manip_cmd)
+        self.clear_vars()
+        self.state = self.rotate_and_observe
+
+
         
 
 
