@@ -49,7 +49,7 @@ class YOLONode(Node):
         self.focal_length = 250
         self.principle_x = 320
         self.principle_y = 240
-        self.camera_xyz = np.array([0, 0.14, 0])
+        self.camera_xyz = np.array([0, 0.2, 0])
         self.camera_th = math.pi*35/180
 
 
