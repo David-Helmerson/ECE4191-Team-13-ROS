@@ -50,7 +50,7 @@ class YOLONode(Node):
         self.principle_x = 320
         self.principle_y = 240
         self.camera_xyz = np.array([0, 0.14, 0])
-        self.camera_th = math.pi/6
+        self.camera_th = math.pi*35/180
 
 
     def img_callback(self, msg):
