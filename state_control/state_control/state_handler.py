@@ -17,38 +17,55 @@ class StateMachineNode(Node):
     rotate_and_observe:
         Rotate until a marble is found, and record U.S. distances
     
-    explore_arena:
-        Determine unobstructed direction, and move a fixed distance.
+    explore_arena_rot:
+        Rotate towards a vacant heading
+
+    explore_arena_lin:
+        Fixed amount of forward movement, with exception of obstacles
 
     orient_to_marble:
         Rotate until a marble is center screen, or if marble is lost or obstacle is obstructing
 
-    move_to_marble:
+    move_towards_marble:
         Send waypoints of marble position to PSoC, until close enough or obstrcuted/lost
 
-    find_marble:
+    refind_marble:
         Orient towards the last seen marble, and determine if visible
+
+    avoid_obstacle:
+        Rotate until no obstacles are detected on ultrasonic sensors
+
+    avoid_obstacle_extra:
+        Continue rotating a fixed angle once no obstacles are detected
+
+    avoid_obstacle_lin:
+        Fixed linear movement to clear obstacles
 
     assurance_movement:
         Predefined movement sequence to magnetize marble
 
     activate_manipulator:
-
+        Moves the maniplator one full rotation
 
     ...
 
     Parameters
     ----------
-    add_out : int
-        Integer added to the input when published to output topic
+    A lot
 
     Topics
     ------
-    example_input : L{std_msgs.Int8}
-        Subscribed integer input
+    pose_est: L{project_interfaces.RobotPose}
+        Publishes serial commands to be sent to PSoC
 
-    example_output : L{std_msgs.Int8}
-        Published output upon recieving input, equal to example_input + add_out
+    marbles: L{project_interfaces.MarbleArray}
+        Target marble x/z positions relative to robot
+
+    ultrasonic_distances: L{project_interfaces.UltrasonicDistances}
+        Recieves distances read by left/right ultransonic distance meters
+
+    command_send: L{project_interfaces.SerialCommand}
+        Publishes serial commands to be sent to PSoC
 
     """
     def __init__(self):
@@ -71,7 +88,7 @@ class StateMachineNode(Node):
         self.state = self.rotate_and_observe  # Define initial state
 
         self.command_pub = self.create_publisher(SerialCommand, 'command_send', 10)
-        self.pose_sub = self.create_subscription(RobotPose, 'pose_est', self.pose_callbcak, 10)
+        self.pose_sub = self.create_subscription(RobotPose, 'pose_est', self.pose_callback, 10)
         self.marble_sub = self.create_subscription(MarbleArray, 'marbles', self.marble_callback, 10)
         self.us_sub = self.create_subscription(UltraSonicDistances, 'us_dists', self.us_callback, 10)
 
@@ -90,7 +107,7 @@ class StateMachineNode(Node):
         self.ao_last_right, self.ao_extra_t = None, None
 
     def pose_callback(self, msg): self.x, self.y, self.th = msg.x, msg.y, msg.th
-    def us_sub(self, msg): self.us_left, self.us_right = msg.left, msg.right
+    def us_callback(self, msg): self.us_left, self.us_right = msg.left, msg.right
     def marble_callback(self, msg): self.marbles = [[m.x, m.z] for m in msg.data]
 
 
