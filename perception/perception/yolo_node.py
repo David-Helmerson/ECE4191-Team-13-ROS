@@ -81,7 +81,7 @@ class YOLONode(Node):
                 xyz = rot.dot(cxyz) + self.camera_xyz
 
                 marble = MarblePos()
-                marble.x, marble.y = xyz[0], xyz[2]  # Confusing coordinate shift
+                marble.x, marble.z = xyz[0], xyz[2]  # Confusing coordinate shift
                 marble_arr.append(marble)
         
             out_msg.data = marble_arr
