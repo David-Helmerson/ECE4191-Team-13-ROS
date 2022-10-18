@@ -34,6 +34,7 @@ class YOLONode(Node):
         # ROS2 Parameters
         self.declare_parameter('marble_rad', 0.02)
         self.declare_parameter('box_buffer', 4)
+        self.declare_parameter('model_name', '500kb.pt')
 
         # Important ROS objects
         self.img_sub = self.create_subscription(Image, 'image', self.img_callback, 1)
@@ -41,7 +42,8 @@ class YOLONode(Node):
         self.bridge = CvBridge()
 
         # Load model
-        model_path = os.path.join(get_package_share_directory('perception'), 'models', 'v5n6best.pt')
+        model_name = self.get_parameter('model_name').get_parameter_value().string_value
+        model_path = os.path.join(get_package_share_directory('perception'), 'models', model_name)
         self.model = torch.hub.load('ultralytics/yolov5', 'custom', path=model_path, force_reload=True)
         self.get_logger().info('Model loaded')
 

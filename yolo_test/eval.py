@@ -5,7 +5,7 @@ from PIL import Image
 img = Image.open('image_0.jpg')
 
 
-model = torch.hub.load('ultralytics/yolov5', 'custom', path='v5n6best.pt', force_reload=True)
+model = torch.hub.load('ultralytics/yolov5', 'custom', path='500kb.pt', force_reload=True)
 
 with torch.no_grad():
     df = model(img).pandas().xyxy[0]
