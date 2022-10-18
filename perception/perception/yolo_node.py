@@ -32,8 +32,8 @@ class YOLONode(Node):
         super().__init__('yolo_node')
 
         # ROS2 Parameters
-        self.declare_parameter('marble_rad', 0.01)
-        self.declare_parameter('box_buffer', 12)
+        self.declare_parameter('marble_rad', 0.02)
+        self.declare_parameter('box_buffer', 4)
 
         # Important ROS objects
         self.img_sub = self.create_subscription(Image, 'image', self.img_callback, 1)
