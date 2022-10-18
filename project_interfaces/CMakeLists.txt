@@ -31,6 +31,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/UltrasonicDistances.msg"
   "msg/Waypoint.msg"
   "msg/WaypointPath.msg"
+  "msg/MarbleArray.msg"
+  "msg/MarblePos.msg"
   "srv/PoseRequest.srv"
   DEPENDENCIES std_msgs)
 

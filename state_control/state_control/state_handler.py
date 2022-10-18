@@ -6,7 +6,7 @@ import numpy as np
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Int8
-from project_interfaces.msg import SerialCommand, UltraSonicDistances, Waypoint, RobotPose, RobotVelocity
+from project_interfaces.msg import SerialCommand, UltraSonicDistances, RobotPose, MarbleArray
 
 class StateMachineNode(Node):
     """
@@ -56,7 +56,7 @@ class StateMachineNode(Node):
 
         # ROS2 Parameters
         self.declare_parameter('us_thresh', 10.0)
-        self.declare_parameter('rot_vel', 0.4)
+        self.declare_parameter('rot_vel', 0.2)
         self.declare_parameter('orient_thresh', 0.1)
         self.declare_parameter('obtain_thresh', 0.1)
         self.declare_parameter('explore_ang_thresh', 0.5)
@@ -64,6 +64,7 @@ class StateMachineNode(Node):
         self.declare_parameter('explore_dist', 0.3)
         self.declare_parameter('assurance_vel', 0.12)
         self.declare_parameter('assurance_dist', 0.1)
+        self.declare_parameter('avoidance_ang', 0.5)
 
         # Important ROS objects
         self.timer = self.create_timer(0.1, lambda: self.state())  # the single dirtiest hack I've ever written
@@ -71,6 +72,8 @@ class StateMachineNode(Node):
 
         self.command_pub = self.create_publisher(SerialCommand, 'command_send', 10)
         self.pose_sub = self.create_subscription(RobotPose, 'pose_est', self.pose_callbcak, 10)
+        self.marble_sub = self.create_subscription(MarbleArray, 'marbles', self.marble_callback, 10)
+        self.us_sub = self.create_subscription(UltraSonicDistances, 'us_dists', self.us_callback, 10)
 
         # Observation
         self.x, self.y, self.th = 0, 0, 0
@@ -78,16 +81,18 @@ class StateMachineNode(Node):
         self.us_left, self.us_right = math.inf, math.inf
 
         # Interstate variables
-        self.rot_t, self.rad_dists = None, []
-        self.explore_angle, self.explore_t = None, None
-        self.target_x, self.target_y = None, None
-
-
-    def pose_callback(self, msg): self.x, self.y, self.th = msg.x, msg.y, msg.th
+        self.clear_vars()
+    
     def clear_vars(self): 
         self.rot_t, self.rad_dists = None, []
         self.target_x, self.target_y = None, None
         self.explore_angle, self.explore_t = None, None
+        self.ao_last_right, self.ao_extra_t = None, None
+
+    def pose_callback(self, msg): self.x, self.y, self.th = msg.x, msg.y, msg.th
+    def us_sub(self, msg): self.us_left, self.us_right = msg.left, msg.right
+    def marble_callback(self, msg): self.marbles = [[m.x, m.z] for m in msg.data]
+
 
     def determine_explore_angle(self):
         # TODO: stress test
@@ -180,14 +185,18 @@ class StateMachineNode(Node):
 
         if self.us_left < us_thresh or self.us_right < us_thresh:
             vel_cmd.p1 = 0.0
-            self.clear_vars
-            self.state = self.avoid_obstacle
+            self.clear_vars()
+            self.state = self.rotate_and_observe
 
         elif t - self.explore_t < d/v:
             vel_cmd.p1 = v
 
-        self.command_pub.publish(vel_cmd)
+        else:
+            vel_cmd.p1 = 0.0
+            self.clear_vars()
+            self.state = self.rotate_and_observe
 
+        self.command_pub.publish(vel_cmd)
 
 
     def orient_to_marble(self):
@@ -229,8 +238,67 @@ class StateMachineNode(Node):
 
     
     def avoid_obstacle(self):
-        # TODO
         self.get_logger().info('STATE: avoid_obstacle')
+        w = self.get_parameter('rot_vel').get_parameter_value().double_value
+
+        rot_cmd = SerialCommand()
+        rot_cmd.id, rot_cmd.p1 = 8, 0.0
+
+        if self.right: 
+            rot_cmd.p2 = w
+            self.ao_last_right = True
+        elif self.left: 
+            rot_cmd.p2 = -w
+            self.ao_last_right = False
+        else:
+            self.state = self.avoid_obstacle_extra
+
+        self.command_pub.publish(rot_cmd)
+
+    def avoid_obstacle_extra(self):
+        self.get_logger().info('STATE: avoid_obstacle_extra')
+        w = self.get_parameter('rot_vel').get_parameter_value().double_value
+        th = self.get_parameter('avoidance_ang').get_parameter_value().double_value
+        t = self.get_clock().now()
+
+        rot_cmd = SerialCommand()
+        rot_cmd.id, rot_cmd.p1, rot_cmd.p2 = 8, 0.0, 0.0
+
+        if self.ao_extra_t is None: self.ao_extra_t = t
+        if t-self.ao_extra_t < th/w:
+            rot_cmd.p2 = w if self.ao_last_right else -w
+        else: 
+            self.ao_last_right, self.ao_extra_t = None, None
+            self.state = self.avoid_obstacle_lin
+        
+        self.command_pub.publish(rot_cmd)
+
+    def avoid_obstacle_lin(self):
+        self.get_logger().info('STATE: avoid_obstacle_lin')
+        us_thresh = self.get_parameter('us_thresh').get_parameter_value().double_value
+        v = self.get_parameter('explore_vel').get_parameter_value().double_value
+        d = self.get_parameter('explore_dist').get_parameter_value().double_value
+        t = self.get_clock().now()
+
+        if self.explore_t is None: self.explore_t = t
+        vel_cmd = SerialCommand()
+        vel_cmd.id, vel_cmd.p2 = 8, 0.0
+
+        if self.us_left < us_thresh or self.us_right < us_thresh:
+            vel_cmd.p1 = 0.0
+            self.explore_t = None
+            self.state = self.avoid_obstacle
+
+        elif t - self.explore_t < d/v:
+            vel_cmd.p1 = v
+
+        else:
+            vel_cmd.p1 = 0.0
+            self.explore_t = None
+            self.state = self.refind_marble
+
+        self.command_pub.publish(vel_cmd)
+        
 
     def refind_marble(self):
         self.get_logger().info('STATE: refind_marble')
@@ -245,7 +313,11 @@ class StateMachineNode(Node):
 
         if abs(heading) < w_thresh:
             rot_cmd.p2 = 0.0
-            self.state = self.orient_to_marble if len(self.marbles) else self.rotate_and_observe
+            if len(self.marbles):
+                self.state = self.orient_to_marble
+            else:
+                self.clear_vars()
+                self.state = self.rotate_and_observe
 
         self.command_pub.publish(rot_cmd)
 
@@ -315,10 +387,6 @@ class StateMachineNode(Node):
         self.command_pub.publish(manip_cmd)
         self.clear_vars()
         self.state = self.rotate_and_observe
-
-
-        
-
 
 
 
