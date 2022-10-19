@@ -2,6 +2,7 @@ import rclpy
 import torch
 import torchvision.transforms as transforms
 import os
+import time
 
 from rclpy.node import Node
 from ament_index_python.packages import get_package_share_directory
@@ -44,6 +45,8 @@ class YOLONode(Node):
         self.declare_parameter('marble_rad', 0.02)
         self.declare_parameter('box_buffer', 4)
         self.declare_parameter('model_name', '500kb.pt')
+        self.marble_rad = self.get_parameter('marble_rad').get_parameter_value().double_value
+        self.box_buffer = self.get_parameter('box_buffer').get_parameter_value().double_value
 
         # Important ROS objects
         self.img_sub = self.create_subscription(Image, 'image', self.img_callback, 1)
@@ -63,39 +66,37 @@ class YOLONode(Node):
         self.camera_xyz = np.array([0, 0.2, 0])
         self.camera_th = math.pi*35/180
 
+        # Derived vars
+        self.s, self.c = math.sin(self.camera_th), math.cos(self.camera_th)
+
 
     def img_callback(self, msg):
         img = self.bridge.imgmsg_to_cv2(msg)
 
         # Detect marbles
-        self.get_logger().info('beginning yolo inference')
+        t0 = time.time()
         df = self.model(img).pandas().xyxy[0]
+        self.get_logger().info("inference time: {time:.5f}s".format(time = time.time()-t0))
         print(df)
-        box_arr = df[df['class'] == 0].to_numpy()[:, :-3]
-        self.get_logger().info('finished yolo inference')
 
         # Process marbles
         out_msg = MarbleArray()
+        box_arr = df[df['class'] == 0].to_numpy()[:, :-3]
         marble_arr = []
-        if box_arr.size > 0:
-            marble_rad = self.get_parameter('marble_rad').get_parameter_value().double_value
-            box_buffer = self.get_parameter('box_buffer').get_parameter_value().double_value
+        for box in box_arr:
+            # Find marble location in camera frame, where z is depth
+            w, h = box[2] - box[0], box[3] - box[1] 
+            px, py, pd = box[0] + w/2, box[1] + h/2, (w+h)/2 - self.box_buffer
+            cxyz = np.array([(px - self.principle_x), (py - self.principle_y), self.focal_length])*self.marble_rad/pd
+            # Transform into planar x,y coordinates
+            rot = np.array([[1, 0, 0], [0, self.c, self.s], [0, self.s, -self.c]])
+            xyz = rot.dot(cxyz) + self.camera_xyz
 
-            for box in box_arr:
-                # Find marble location in camera frame, where z is depth
-                w, h = box[2] - box[0], box[3] - box[1] 
-                px, py, pd = box[0] + w/2, box[1] + h/2, (w+h)/2 - box_buffer
-                cxyz = np.array([(px - self.principle_x), (py - self.principle_y), self.focal_length])*marble_rad/pd
-                # Transform into planar x,y coordinates
-                s, c = math.sin(self.camera_th), math.cos(self.camera_th)
-                rot = np.array([[1, 0, 0], [0, c, s], [0, s, -c]])
-                xyz = rot.dot(cxyz) + self.camera_xyz
-
-                marble = MarblePos()
-                marble.x, marble.z = xyz[0], xyz[2]  # Confusing coordinate shift
-                marble_arr.append(marble)
+            marble = MarblePos()
+            marble.x, marble.z = xyz[0], xyz[2]  # Confusing coordinate shift
+            marble_arr.append(marble)
         
-            out_msg.data = marble_arr
+        out_msg.data = marble_arr
         self.pub.publish(out_msg)
                 
                 
