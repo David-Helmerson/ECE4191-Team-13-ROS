@@ -1,12 +1,13 @@
 from asyncio.log import logger
 import math
 import random
+import time
 from turtle import width
 import numpy as np
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Int8
-from project_interfaces.msg import SerialCommand, UltraSonicDistances, RobotPose, MarbleArray
+from project_interfaces.msg import SerialCommand, UltrasonicDistances, RobotPose, MarbleArray
 
 class StateMachineNode(Node):
     """
@@ -90,7 +91,7 @@ class StateMachineNode(Node):
         self.command_pub = self.create_publisher(SerialCommand, 'command_send', 10)
         self.pose_sub = self.create_subscription(RobotPose, 'pose_est', self.pose_callback, 10)
         self.marble_sub = self.create_subscription(MarbleArray, 'marbles', self.marble_callback, 10)
-        self.us_sub = self.create_subscription(UltraSonicDistances, 'us_dists', self.us_callback, 10)
+        self.us_sub = self.create_subscription(UltrasonicDistances, 'us_dists', self.us_callback, 10)
 
         # Observation
         self.x, self.y, self.th = 0, 0, 0
@@ -120,7 +121,7 @@ class StateMachineNode(Node):
         dists = np.array(self.rad_dists)
         vacant = np.logical_and(dists[:, 1] > us_thresh, dists[:, 2] > us_thresh)
         ends = np.argwhere(np.diff(vacant)).squeeze()
-        ends += np.array([(not vacant[0]) ^ i%2 for i in range(len(ends))])
+        ends += np.array([(not vacant[0]) ^ i%2 for i in range(len(ends))]).astype(int)
         # Handle case with no obstruction
         if np.all(vacant): return random.uniform(0, 2*math.pi)
 
@@ -135,19 +136,19 @@ class StateMachineNode(Node):
         ranges, widths = [], []
         for i in range(0, len(angs), 2):
             a1, a2 = angs[i], angs[i+1]
-            if a1 > a2: a1, a1 -= 2*math.pi
+            if a1 > a2: a1 -= 2*math.pi
             if a2 - a1 > 2*ang_thresh:
                 ranges.append((a1 + ang_thresh, a2 - ang_thresh))
                 widths.append((a2 - a1 - 2*ang_thresh))
 
-        range = ranges[np.random.choice(len(ranges), p=widths)]
-        return random.uniform(range[0], range[1])
+        vac_range = ranges[np.random.choice(len(ranges), p=widths)]
+        return random.uniform(vac_range[0], vac_range[1])
 
         
     def rotate_and_observe(self):
         self.get_logger().info('STATE: rotate_and_observe')
         w = self.get_parameter('rot_vel').get_parameter_value().double_value
-        t = self.get_clock().now()
+        t = time.time()
 
         # Create rotation command
         rot_cmd = SerialCommand()
@@ -194,7 +195,7 @@ class StateMachineNode(Node):
         us_thresh = self.get_parameter('us_thresh').get_parameter_value().double_value
         v = self.get_parameter('explore_vel').get_parameter_value().double_value
         d = self.get_parameter('explore_dist').get_parameter_value().double_value
-        t = self.get_clock().now()
+        t = time.time()
 
         if self.explore_t is None: self.explore_t = t
         vel_cmd = SerialCommand()
@@ -276,7 +277,7 @@ class StateMachineNode(Node):
         self.get_logger().info('STATE: avoid_obstacle_extra')
         w = self.get_parameter('rot_vel').get_parameter_value().double_value
         th = self.get_parameter('avoidance_ang').get_parameter_value().double_value
-        t = self.get_clock().now()
+        t = time.time()
 
         rot_cmd = SerialCommand()
         rot_cmd.id, rot_cmd.p1, rot_cmd.p2 = 8, 0.0, 0.0
@@ -295,7 +296,7 @@ class StateMachineNode(Node):
         us_thresh = self.get_parameter('us_thresh').get_parameter_value().double_value
         v = self.get_parameter('explore_vel').get_parameter_value().double_value
         d = self.get_parameter('explore_dist').get_parameter_value().double_value
-        t = self.get_clock().now()
+        t = time.time()
 
         if self.explore_t is None: self.explore_t = t
         vel_cmd = SerialCommand()
@@ -383,7 +384,7 @@ class StateMachineNode(Node):
         self.get_logger().info('STATE: assurance_movement')
         v = self.get_parameter('assurance_vel').get_parameter_value().double_value
         d = self.get_parameter('assurance_dist').get_parameter_value().double_value
-        t = self.get_clock().now()
+        t = time.time()
 
         if self.explore_t is None: self.explore_t = t
         vel_cmd = SerialCommand()
