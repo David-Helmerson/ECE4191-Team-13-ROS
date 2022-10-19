@@ -67,7 +67,8 @@ class YOLONode(Node):
         self.camera_th = math.pi*35/180
 
         # Derived vars
-        self.s, self.c = math.sin(self.camera_th), math.cos(self.camera_th)
+        s, c = math.sin(self.camera_th), math.cos(self.camera_th)
+        self.rot = np.array([[1, 0, 0], [0, c, s], [0, s, -c]])
 
 
     def img_callback(self, msg):
@@ -88,12 +89,11 @@ class YOLONode(Node):
             w, h = box[2] - box[0], box[3] - box[1] 
             px, py, pd = box[0] + w/2, box[1] + h/2, (w+h)/2 - self.box_buffer
             cxyz = np.array([(px - self.principle_x), (py - self.principle_y), self.focal_length])*self.marble_rad/pd
-            # Transform into planar x,y coordinates
-            rot = np.array([[1, 0, 0], [0, self.c, self.s], [0, self.s, -self.c]])
-            xyz = rot.dot(cxyz) + self.camera_xyz
-
+            
+            # Transform into planar x,z coordinates
+            xyz = self.rot.dot(cxyz) + self.camera_xyz
             marble = MarblePos()
-            marble.x, marble.z = xyz[0], xyz[2]  # Confusing coordinate shift
+            marble.x, marble.z = xyz[0], xyz[2]
             marble_arr.append(marble)
         
         out_msg.data = marble_arr
