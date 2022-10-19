@@ -24,11 +24,6 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'depth_perception = perception.depth_perception:main',
-            'marble_detector = perception.marble_detection:main',
-            'marble_classifier = perception.marble_classifier:main',
-            'dp_test = perception.dp_testing:main',
-            'image_snapshot = perception.image_snapshot:main',
             'yolo = perception.yolo_node:main'
         ],
     },

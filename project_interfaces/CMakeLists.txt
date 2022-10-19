@@ -22,16 +22,13 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/MousePos.msg"
   "msg/RobotPose.msg"
   "msg/RobotVelocity.msg"
   "msg/SerialCommand.msg"
   "msg/UltrasonicDistances.msg"
   "msg/Waypoint.msg"
-  "msg/WaypointPath.msg"
   "msg/MarblePos.msg"
   "msg/MarbleArray.msg"
-  "srv/PoseRequest.srv"
   DEPENDENCIES std_msgs)
 
 
