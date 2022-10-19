@@ -13,19 +13,28 @@ import math
 
 class YOLONode(Node):
     """
-    Node to identify magnetic marble positions relative to robot, via use of YOLOv5n6
+    Node to identify magnetic marble positions relative to robot, via use of custom YOLO model
 
     ...
 
     Parameters
     ----------
-    add_out : int
-        Integer added to the input when published to output topic
+    marble_rad : float
+        Radius of target marbles in meters
+
+    box_buffer : int
+        Assumed overestimation of bounding box width/height, in pixels
+    
+    model_name : string
+        Name of YOLO model file stored in perception/models
 
     Topics
     ------
     image : L{sensor_msgs.Image}
         Subscribed camera image with resolution 640x480
+
+    marbles : L{project_interfaces.MarbleArray}
+        Output positions of marbles in robot frame (presumed axle center footprint)
 
     """
     def __init__(self):
@@ -44,12 +53,12 @@ class YOLONode(Node):
         # Load model
         model_name = self.get_parameter('model_name').get_parameter_value().string_value
         model_path = os.path.join(get_package_share_directory('perception'), 'models', model_name)
-        self.model = torch.hub.load('ultralytics/yolov5', 'custom', path=model_path, force_reload=True)
+        self.model = torch.hub.load('ultralytics/yolov5', 'custom', path=model_path, force_reload=False)
         self.get_logger().info('Model loaded')
 
         # Camera vars
-        self.focal_length = 250
-        self.principle_x = 320
+        self.focal_length = 0.25  # Focal length in meters
+        self.principle_x = 320  # Principle points in pixels
         self.principle_y = 240
         self.camera_xyz = np.array([0, 0.2, 0])
         self.camera_th = math.pi*35/180
