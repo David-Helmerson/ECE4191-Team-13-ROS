@@ -31,6 +31,9 @@ def generate_launch_description():
         Node(
             package='perception',
             executable='yolo',
+            parameters=[
+                {"model_name": '500kb_targets.pt'}
+            ]
         ),
 
         Node(
