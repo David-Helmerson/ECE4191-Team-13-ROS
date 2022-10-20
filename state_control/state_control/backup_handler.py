@@ -61,13 +61,13 @@ class SimpleStateMachineNode(Node):
 
         # State variables
         self.obtain_time = None
-        self.obtain_x, self.obtain_y = None, None
+        self.obtain_ang, self.obtain_dist = None, None
         self.rot_dir = 1  # 1 for counterclockwise, -1 for clockwise
 
     def pose_callback(self, msg): self.x, self.y, self.th = msg.x, msg.y, msg.th
     def us_callback(self, msg): self.us_left, self.us_right = msg.left, msg.right
     def marble_callback(self, msg): 
-        self.closest, self.closest_d2 = None, math.inf
+        self.closest, self.closest_d2 = None, math.inf  # Max distance for target to be considered
         for m in msg.data:
             md2 = m.x**2 + m.z**2
             if md2 < self.closest_d2:
@@ -83,97 +83,59 @@ class SimpleStateMachineNode(Node):
         rot_cmd = SerialCommand()
         rot_cmd.id, rot_cmd.p2 = 8, w*self.rot_dir
 
-        self.get_logger().info(' '.join([str(self.us_left), str(self.us_right)]))
-        if self.us_left < us_thresh or self.us_right < us_thresh:
-            rot_cmd.p2 = 0.0
-            self.state = self.avoid_obstacle
+        self.get_logger().info(' '.join(['Ultrasonics', str(self.us_left), str(self.us_right)]))
 
-        elif self.closest is not None:
-            self.get_logger().info(' '.join([str(self.closest.x), str(self.closest.z)]))
-            rot_cmd.p2 = 0.0
-            self.state = self.rotate_to_marble
+        if self.us_left > us_thresh and self.us_right > us_thresh:
+            if self.closest is not None:
+                self.rotation_time = -math.inf
+                self.obtain_ang = math.atan(self.closest.x, self.closest.z)
+                self.obtain_dist = math.sqrt(self.closest.x**2 + self.closest.z**2)
+                self.state = self.orient
+                self.get_logger().info(' '.join(['closest', str(self.closest.x), str(self.closest.z)]))
+
+            elif time.time() - self.rotation_time > 5:
+                self.linear_time, self.rotation_time = time.time(), -math.inf
+                self.state = self.linear
 
         self.command_pub.publish(rot_cmd)
 
     
-    def avoid_obstacle(self):
-        self.get_logger().info('STATE: avoid_obstacle')
+    def orient(self):
+        self.get_logger().info('STATE: orient')
         us_thresh = self.get_parameter('us_thresh').get_parameter_value().double_value
-        w = self.get_parameter('rot_vel').get_parameter_value().double_value
-
-        rot_cmd = SerialCommand()
-        rot_cmd.id, rot_cmd.p2 = 8, w
-
-        if self.us_left < us_thresh:
-            self.rot_dir = 1
-            rot_cmd.p2 = -w
-
-        elif self.us_right < us_thresh:
-            self.rot_dir = -1
-
-        else:
-            rot_cmd.p2 = 0.0
-            self.state = self.rotate
-
-        self.command_pub.publish(rot_cmd)
-
-
-    def rotate_to_marble(self):
-        self.get_logger().info('STATE: rotate_to_marble')
-        us_thresh = self.get_parameter('us_thresh').get_parameter_value().double_value
+        orient_thresh = self.declare_parameter('orient_thresh', 0.1)
 
         cmd = SerialCommand()
         cmd.id = 8
-        
-        if self.us_left < us_thresh or self.us_right < us_thresh: self.state = self.avoid_obstacle
-        elif self.closest_d2 is None or self.closest is None: self.state = self.rotate
-        else:
-            orient_thresh = self.get_parameter('orient_thresh').get_parameter_value().double_value
-            ang = math.atan(self.closest.x/self.closest.z)
 
-            if ang < orient_thresh: 
-                d = self.get_parameter('assurance_dist').get_parameter_value().double_value + math.sqrt(self.closest_d2)
-                self.obtain_x, self.obtain_y = self.x - d*math.sin(ang+self.th), self.y + d*math.cos(ang+self.th)
-                self.obtain_time = time.time()
-                self.state = self.obtain_marble
-            else: cmd.id, cmd.p1 = 61, ang
+        if self.us_left < us_thresh or self.us_right < us_thresh or self.obtain_ang is None: 
+            self.linear_time, self.rotation_time = -math.inf, time.time()
+            self.obtain_ang, self.obtain_dist = None, None
+            self.state = self.rotate
+        
+        else:
+            cmd = SerialCommand()
+            cmd.id, cmd.p1 = 61, self.obtain_ang
+            self.linear_time, self.rotation_time = time.time(), -math.inf
+            self.state = self.linear
 
         self.command_pub.publish(cmd)
 
-    
-    def obtain_marble(self):
-        self.get_logger().info('STATE: obtain_marble')
+    def linear(self):
+        self.get_logger().info('STATE: linear')
         us_thresh = self.get_parameter('us_thresh').get_parameter_value().double_value
+        lin_vel = self.get_parameter('lin_vel').get_parameter_value().double_value
 
         cmd = SerialCommand()
         cmd.id = 8
         
         self.get_logger().info(' '.join(['Ultrasonics', str(self.us_right), str(self.us_left)]))
-        if self.us_left < us_thresh or self.us_right < us_thresh: 
-            self.obtain_x, self.obtain_y = None, None
-            self.obtain_time = None
-            self.state = self.avoid_obstacle
 
-        elif self.obtain_x is None or self.obtain_time is None:  # Catch unexpected behaviour
+        if self.us_left < us_thresh or self.us_right < us_thresh or time.time() - self.linear_time > 3.0: 
+            self.linear_time, self.rotation_time = -math.inf, time.time()
             self.state = self.rotate
 
-        elif (time.time() - self.obtain_time) > 3.0:
-            self.state = self.rotate
-
-        else:
-            cmd.id = 8
-            obtain_thresh = self.get_parameter('obtain_thresh').get_parameter_value().double_value**2
-            
-            dx, dy = self.obtain_x-self.x, self.obtain_y - self.y
-            s, c = math.cos(self.th), math.sin(self.th)
-            x, y = dx*c - dy*s, dx*s + dy*c
-            self.get_logger().info(' '.join(['Moving to', str(x), str(y)]))
-            cmd.p1, cmd.p2 = 0.1, 0.0
-
-            if x**2 + y**2 < obtain_thresh: 
-                self.obtain_x, self.obtain_y = None, None
-                self.obtain_time = None
-                self.state = self.rotate
+        else: cmd.p1, cmd.p2 = lin_vel, 0.0
 
         self.command_pub.publish(cmd)
             
