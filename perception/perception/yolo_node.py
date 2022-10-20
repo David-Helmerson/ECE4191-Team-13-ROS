@@ -44,7 +44,7 @@ class YOLONode(Node):
         # ROS2 Parameters
         self.declare_parameter('marble_rad', 0.02)
         self.declare_parameter('box_buffer', 4)
-        self.declare_parameter('model_name', '500kb.pt')
+        self.declare_parameter('model_name', '500kb_targets.pt')
         self.marble_rad = self.get_parameter('marble_rad').get_parameter_value().double_value
         self.box_buffer = self.get_parameter('box_buffer').get_parameter_value().double_value
 
