@@ -82,12 +82,12 @@ class SimpleStateMachineNode(Node):
         rot_cmd.id, rot_cmd.p2 = 8, w*self.rot_dir
 
         self.get_logger().info(' '.join([str(self.us_left), str(self.us_right)]))
-        self.get_logger().info(' '.join([str(self.closest.x), str(self.closest.z)]))
         if self.us_left < us_thresh or self.us_right < us_thresh:
             rot_cmd.p2 = 0.0
             self.state = self.avoid_obstacle
 
         elif self.closest is not None:
+            self.get_logger().info(' '.join([str(self.closest.x), str(self.closest.z)]))
             rot_cmd.p2 = 0.0
             self.state = self.rotate_to_marble
 
