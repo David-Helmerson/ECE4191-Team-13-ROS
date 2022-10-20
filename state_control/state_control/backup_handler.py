@@ -153,13 +153,13 @@ class SimpleStateMachineNode(Node):
             self.state = self.rotate
 
         else:
-            self.cmd.id = 9
+            cmd.id = 9
             obtain_thresh = self.get_parameter('obtain_thresh').get_parameter_value().double_value**2
             
             dx, dy = self.obtain_x-self.x, self.obtain_y - self.y
             s, c = math.cos(self.th), math.sin(self.th)
             x, y = dx*c - dy*s, dx*s + dy*c
-            self.cmd.p1, self.cmd.p2 = x, y
+            cmd.p1, cmd.p2 = x, y
 
             if x**2 + y**2 < obtain_thresh: 
                 self.obtain_x, self.obtain_y = None, None
