@@ -146,7 +146,7 @@ class SimpleStateMachineNode(Node):
         us_thresh = self.get_parameter('us_thresh').get_parameter_value().double_value
 
         cmd = SerialCommand()
-        cmd.id = 9
+        cmd.id = 8
         
         self.get_logger().info(' '.join(['Ultrasonics', str(self.us_right), str(self.us_left)]))
         if self.us_left < us_thresh or self.us_right < us_thresh: 
@@ -161,14 +161,14 @@ class SimpleStateMachineNode(Node):
             self.state = self.rotate
 
         else:
-            cmd.id = 9
+            cmd.id = 8
             obtain_thresh = self.get_parameter('obtain_thresh').get_parameter_value().double_value**2
             
             dx, dy = self.obtain_x-self.x, self.obtain_y - self.y
             s, c = math.cos(self.th), math.sin(self.th)
             x, y = dx*c - dy*s, dx*s + dy*c
             self.get_logger().info(' '.join(['Moving to', str(x), str(y)]))
-            cmd.p1, cmd.p2 = 0.0, y
+            cmd.p1, cmd.p2 = 0.1, 0.0
 
             if x**2 + y**2 < obtain_thresh: 
                 self.obtain_x, self.obtain_y = None, None
