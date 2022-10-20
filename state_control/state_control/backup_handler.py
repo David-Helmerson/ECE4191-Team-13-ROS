@@ -66,10 +66,10 @@ class SimpleStateMachineNode(Node):
     def us_callback(self, msg): self.us_left, self.us_right = msg.left, msg.right
     def marble_callback(self, msg): 
         self.closest, self.closest_d2 = None, math.inf
-        for m in msg:
+        for m in msg.data:
             md2 = m.x**2 + m.z**2
             if md2 < self.closest_d2:
-                self.closest, self.closest_d2 = msg, md2
+                self.closest, self.closest_d2 = m, md2
 
     
     def rotate(self):
