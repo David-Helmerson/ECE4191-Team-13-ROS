@@ -159,6 +159,7 @@ class SimpleStateMachineNode(Node):
             dx, dy = self.obtain_x-self.x, self.obtain_y - self.y
             s, c = math.cos(self.th), math.sin(self.th)
             x, y = dx*c - dy*s, dx*s + dy*c
+            self.get_logger().info(' '.join(['Moving to', str(x), str(y)]))
             cmd.p1, cmd.p2 = x, y
 
             if x**2 + y**2 < obtain_thresh: 
