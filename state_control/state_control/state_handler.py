@@ -1,12 +1,9 @@
-from asyncio.log import logger
 import math
 import random
 import time
-from turtle import width
 import numpy as np
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Int8
 from project_interfaces.msg import SerialCommand, UltrasonicDistances, RobotPose, MarbleArray
 
 class StateMachineNode(Node):

@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'state_handler = state_control.state_handler:main'
+            'state_handler = state_control.state_handler:main',
+            'backup_handler = state_control.backup_handler:main'
         ],
     },
 )
