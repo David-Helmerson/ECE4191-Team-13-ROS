@@ -88,10 +88,12 @@ class YOLONode(Node):
             # Find marble location in camera frame, where z is depth
             w, h = box[2] - box[0], box[3] - box[1] 
             px, py, pd = box[0] + w/2, box[1] + h/2, (w+h)/2 - self.box_buffer
+            print('pixel xyd', px, py, pd)
             cxyz = np.array([(px - self.principle_x), (py - self.principle_y), self.focal_length])*self.marble_rad/pd
-            
+            print('cxyz', cxyz)
             # Transform into planar x, z coordinates
             xyz = self.rot.dot(cxyz) + self.camera_xyz
+            print('xyz', xyz)
             marble = MarblePos()
             marble.x, marble.z = xyz[0], xyz[2]
             marble_arr.append(marble)
