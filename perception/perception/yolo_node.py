@@ -64,7 +64,7 @@ class YOLONode(Node):
         self.principle_x = 320  # Principle points in pixels
         self.principle_y = 240
         self.camera_xyz = np.array([0, 0.2, 0.05])
-        self.camera_th = math.pi*35/180
+        self.camera_th = math.pi*3/180
 
         # Derived vars
         s, c = math.sin(self.camera_th), math.cos(self.camera_th)
