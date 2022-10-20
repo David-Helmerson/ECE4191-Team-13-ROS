@@ -10,17 +10,20 @@ def generate_launch_description():
                 {"width": 640},
                 {"height": 480},
                 {"frequency": 5.0}
-            ]
+            ],
+            arguments=[('__log_level:=debug')]
         ),
 
         Node(
             package='serial_communication',
             executable='serial_sender',
+            arguments=[('__log_level:=debug')]
         ),
 
         Node(
             package='serial_communication',
             executable='serial_reader',
+            arguments=[('__log_level:=debug')]
         ),
 
         Node(
