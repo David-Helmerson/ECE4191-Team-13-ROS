@@ -74,8 +74,9 @@ class SerialReaderNode(Node):
 
             else:
                 # Publish data to topic
+                self.get_logger().info(str(in_bytes))
                 _, id, p1, p2, _ = struct.unpack('>3sBff3s', in_bytes)
-                print('recieved', id, p1, p2)
+                self.get_logger.info(str(id) + ' ' + str(p1) + ' ' + str(p2))
 
                 # Resynchronize sent serial bytes for PSoC
                 if id == 90: 
