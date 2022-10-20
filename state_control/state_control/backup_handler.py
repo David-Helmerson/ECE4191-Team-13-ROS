@@ -157,7 +157,7 @@ class SimpleStateMachineNode(Node):
         elif self.obtain_x is None or self.obtain_time is None:  # Catch unexpected behaviour
             self.state = self.rotate
 
-        elif (time.time() - self.obtain_time) > 1.0:
+        elif (time.time() - self.obtain_time) > 3.0:
             self.state = self.rotate
 
         else:
@@ -168,7 +168,7 @@ class SimpleStateMachineNode(Node):
             s, c = math.cos(self.th), math.sin(self.th)
             x, y = dx*c - dy*s, dx*s + dy*c
             self.get_logger().info(' '.join(['Moving to', str(x), str(y)]))
-            cmd.p1, cmd.p2 = x, y
+            cmd.p1, cmd.p2 = 0.0, y
 
             if x**2 + y**2 < obtain_thresh: 
                 self.obtain_x, self.obtain_y = None, None
