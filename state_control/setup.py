@@ -21,7 +21,8 @@ setup(
     entry_points={
         'console_scripts': [
             'state_handler = state_control.state_handler:main',
-            'backup_handler = state_control.backup_handler:main'
+            'backup_handler = state_control.backup_handler:main',
+            'final_handler = state_control.final_handler:main'
         ],
     },
 )
