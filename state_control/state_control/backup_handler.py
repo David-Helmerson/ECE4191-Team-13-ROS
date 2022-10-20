@@ -36,7 +36,7 @@ class SimpleStateMachineNode(Node):
         super().__init__('state_machine')
 
         # ROS2 Parameters
-        self.declare_parameter('us_thresh', 0.1)  # IS THIS IN cm OR m
+        self.declare_parameter('us_thresh', 0.15)
         self.declare_parameter('rot_vel', 0.3)
         self.declare_parameter('lin_vel', 1.0)
         self.declare_parameter('orient_thresh', 0.1)
@@ -90,6 +90,7 @@ class SimpleStateMachineNode(Node):
                 self.rotation_time = -math.inf
                 self.obtain_ang = math.atan(self.closest.x, self.closest.z)
                 self.obtain_dist = math.sqrt(self.closest.x**2 + self.closest.z**2)
+                self.obtain_time = time.time()
                 self.state = self.orient
                 self.get_logger().info(' '.join(['closest', str(self.closest.x), str(self.closest.z)]))
 
@@ -103,6 +104,7 @@ class SimpleStateMachineNode(Node):
     def orient(self):
         self.get_logger().info('STATE: orient')
         us_thresh = self.get_parameter('us_thresh').get_parameter_value().double_value
+        w = self.get_parameter('rot_vel').get_parameter_value().double_value
         orient_thresh = self.declare_parameter('orient_thresh', 0.1)
 
         cmd = SerialCommand()
@@ -111,11 +113,16 @@ class SimpleStateMachineNode(Node):
         if self.us_left < us_thresh or self.us_right < us_thresh or self.obtain_ang is None: 
             self.linear_time, self.rotation_time = -math.inf, time.time()
             self.obtain_ang, self.obtain_dist = None, None
+            self.obtain_time = -math.inf
             self.state = self.rotate
         
+        elif time.time() - self.obtain_time > self.obtain_ang/w:
+            if self.obtain_ang > 0:
+                self.cmd.p2 = w
+            else:
+                self.cmd.p2 = -w
+
         else:
-            cmd = SerialCommand()
-            cmd.id, cmd.p1 = 61, self.obtain_ang
             self.linear_time, self.rotation_time = time.time(), -math.inf
             self.state = self.linear
 
