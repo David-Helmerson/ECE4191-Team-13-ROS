@@ -168,14 +168,6 @@ class SimpleStateMachineNode(Node):
         self.command_pub.publish(cmd)
             
 
-
-
-        
-
-
-
-
-
 def main(args=None):
     rclpy.init(args=args)
     simple_state_machine = SimpleStateMachineNode()
