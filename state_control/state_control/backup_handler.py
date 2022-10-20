@@ -145,6 +145,7 @@ class SimpleStateMachineNode(Node):
         cmd = SerialCommand()
         cmd.id = 9
         
+        self.get_logger().info(' '.join(['Ultrasonics', str(self.us_right), str(self.us_left)]))
         if self.us_left < us_thresh or self.us_right < us_thresh: 
             self.obtain_x, self.obtain_y = None, None
             self.state = self.avoid_obstacle
