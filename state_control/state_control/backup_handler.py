@@ -1,4 +1,5 @@
 import math
+import time
 import rclpy
 from rclpy.node import Node
 from project_interfaces.msg import SerialCommand, UltrasonicDistances, RobotPose, MarbleArray
@@ -59,6 +60,7 @@ class SimpleStateMachineNode(Node):
         self.us_left, self.us_right = math.inf, math.inf
 
         # State variables
+        self.obtain_time = None
         self.obtain_x, self.obtain_y = None, None
         self.rot_dir = 1  # 1 for counterclockwise, -1 for clockwise
 
@@ -132,6 +134,7 @@ class SimpleStateMachineNode(Node):
             if ang < orient_thresh: 
                 d = self.get_parameter('assurance_dist').get_parameter_value().double_value + math.sqrt(self.closest_d2)
                 self.obtain_x, self.obtain_y = self.x - d*math.sin(ang+self.th), self.y + d*math.cos(ang+self.th)
+                self.obtain_time = time.time()
                 self.state = self.obtain_marble
             else: cmd.id, cmd.p1 = 61, ang
 
@@ -148,9 +151,13 @@ class SimpleStateMachineNode(Node):
         self.get_logger().info(' '.join(['Ultrasonics', str(self.us_right), str(self.us_left)]))
         if self.us_left < us_thresh or self.us_right < us_thresh: 
             self.obtain_x, self.obtain_y = None, None
+            self.obtain_time = None
             self.state = self.avoid_obstacle
 
-        elif self.obtain_x is None:  # Catch unexpected behaviour
+        elif self.obtain_x is None or self.obtain_time is None:  # Catch unexpected behaviour
+            self.state = self.rotate
+
+        elif (time.time() - self.obtain_time) > 1.0:
             self.state = self.rotate
 
         else:
@@ -165,6 +172,7 @@ class SimpleStateMachineNode(Node):
 
             if x**2 + y**2 < obtain_thresh: 
                 self.obtain_x, self.obtain_y = None, None
+                self.obtain_time = None
                 self.state = self.rotate
 
         self.command_pub.publish(cmd)
