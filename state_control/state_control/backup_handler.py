@@ -63,6 +63,9 @@ class SimpleStateMachineNode(Node):
         self.obtain_time = None
         self.obtain_ang, self.obtain_dist = None, None
         self.rot_dir = 1  # 1 for counterclockwise, -1 for clockwise
+        self.linear_time = -math.inf
+        self.rot_dir = 1
+        self.rotation_time = time.time()
 
     def pose_callback(self, msg): self.x, self.y, self.th = msg.x, msg.y, msg.th
     def us_callback(self, msg): self.us_left, self.us_right = msg.left, msg.right
