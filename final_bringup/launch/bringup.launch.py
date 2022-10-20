@@ -1,8 +1,17 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
+import launch
 
 def generate_launch_description():
+    logger = launch.substitutions.LaunchConfiguration("log_level")
+
     return LaunchDescription([
+        launch.actions.DeclareLaunchArgument(
+            "log_level",
+            default_value=["debug"],
+            description="Logging level",
+        ),
+
         Node(
             package='image_tools',
             executable='cam2image',
@@ -11,19 +20,19 @@ def generate_launch_description():
                 {"height": 480},
                 {"frequency": 5.0}
             ],
-            arguments=[('__log_level:=debug')]
+            arguments=['--ros-args', '--log-level', logger]
         ),
 
         Node(
             package='serial_communication',
             executable='serial_sender',
-            arguments=[('__log_level:=debug')]
+            arguments=['--ros-args', '--log-level', logger]
         ),
 
         Node(
             package='serial_communication',
             executable='serial_reader',
-            arguments=[('__log_level:=debug')]
+            arguments=['--ros-args', '--log-level', logger]
         ),
 
         Node(
