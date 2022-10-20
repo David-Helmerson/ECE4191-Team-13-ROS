@@ -126,7 +126,7 @@ class SimpleStateMachineNode(Node):
         cmd.id = 8
         
         if self.us_left < us_thresh or self.us_right < us_thresh: self.state = self.avoid_obstacle
-        elif self.closest_d2 is None: self.state = self.rotate
+        elif self.closest_d2 is None or self.closest is None: self.state = self.rotate
         else:
             orient_thresh = self.get_parameter('orient_thresh').get_parameter_value().double_value
             ang = math.atan(self.closest.x/self.closest.z)
