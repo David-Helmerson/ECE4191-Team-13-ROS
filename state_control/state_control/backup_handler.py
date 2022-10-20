@@ -115,14 +115,9 @@ class SimpleStateMachineNode(Node):
             self.obtain_ang, self.obtain_dist = None, None
             self.obtain_time = -math.inf
             self.state = self.rotate
-        
-        elif time.time() - self.obtain_time > self.obtain_ang/w:
-            if self.obtain_ang > 0:
-                self.cmd.p2 = w
-            else:
-                self.cmd.p2 = -w
 
         else:
+            cmd.id, cmd.p1 = 14, self.obtain_ang
             self.linear_time, self.rotation_time = time.time(), -math.inf
             self.state = self.linear
 
