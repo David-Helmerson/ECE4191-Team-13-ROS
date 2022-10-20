@@ -110,7 +110,7 @@ class SimpleStateMachineNode(Node):
             self.rot_dir = 1
 
         else:
-            rot_cmd = 0.0
+            rot_cmd.p2 = 0.0
             self.state = self.rotate
 
         self.command_pub.publish(rot_cmd)
