@@ -105,11 +105,11 @@ class SimpleStateMachineNode(Node):
         rot_cmd.id, rot_cmd.p2 = 8, w
 
         if self.us_left < us_thresh:
-            self.rot_dir = -1
+            self.rot_dir = 1
             rot_cmd.p2 = -w
 
         elif self.us_right < us_thresh:
-            self.rot_dir = 1
+            self.rot_dir = -1
 
         else:
             rot_cmd.p2 = 0.0
