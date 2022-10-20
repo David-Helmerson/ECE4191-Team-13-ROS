@@ -49,7 +49,7 @@ class SimpleStateMachineNode(Node):
         self.command_pub = self.create_publisher(SerialCommand, 'command_send', 10)
         self.pose_sub = self.create_subscription(RobotPose, 'pose_est', self.pose_callback, 10)
         self.marble_sub = self.create_subscription(MarbleArray, 'marbles', self.marble_callback, 10)
-        self.us_sub = self.create_subscription(UltrasonicDistances, 'us_dists', self.us_callback, 10)
+        self.us_sub = self.create_subscription(UltrasonicDistances, 'ultrasonic_distances', self.us_callback, 10)
 
         # Observation
         self.x, self.y, self.th = 0, 0, 0
